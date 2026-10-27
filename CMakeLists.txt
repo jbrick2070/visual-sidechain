@@ -51,6 +51,8 @@ target_sources(
     src/core/onset.c
     src/core/analyzer.h
     src/core/analyzer.c
+    src/obs/audio-tap.h
+    src/obs/audio-tap.c
 )
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE src)
 
