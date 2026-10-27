@@ -45,6 +45,8 @@ target_sources(
     src/core/fft.c
     src/core/spectrum.h
     src/core/spectrum.c
+    src/core/envelope.h
+    src/core/envelope.c
 )
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE src)
 
