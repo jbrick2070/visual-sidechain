@@ -57,6 +57,8 @@ target_sources(
     src/core/baseline.c
     src/obs/audio-tap.h
     src/obs/audio-tap.c
+    src/obs/modulator-filter.h
+    src/obs/modulator-filter.c
 )
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE src)
 
