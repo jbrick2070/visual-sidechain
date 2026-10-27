@@ -306,6 +306,21 @@ Goal: Ship the **Visual Sidechain: Shader Filter** binding all audio uniforms + 
 3. **Step 4.3 -- Portable OBS 33 D3D11 compilation & stacked GPU cost verification (`TESTING.md` 4.1..4.3)**:
    - Load each of the 9 built-in shaders in portable OBS 33.0.0 on a 1080p60 source (including `fft-spectral-aura.shader` stacked directly below **NVIDIA Background Removal**), verify zero HLSL compiler warnings/errors in the OBS log, verify live FFT reactivity, and measure stacked GPU frame time (3 FFT shaders + 1 Audio Modulator driving NVIDIA Background Removal on the RTX 5080).
 
+### Phase 5 -- Vendor API Signal Publishing & Fader Slots as Modulation Sources (`R-VND-1..3`, `R-MOD-7`)
+Goal: Expose all Visual Sidechain audio/beat signals over the `obs-websocket` 5 vendor API (`vendor_name = "visual-sidechain"`) and `obs_get_proc_handler()`, and allow the 10 Fadester fader slots (`crossfader`, `fader_1`..`fader_8`, `master`) to act as modulation sources in the Audio Modulator and Shader Filter. Version `0.5.0`.
+
+1. **Step 5.1 -- Pure-C Fader & Signal Bridge (`src/core/fader-bridge.h`, `src/core/fader-bridge.c`, `tests/test-fader-bridge.c`)**:
+   - Implements the 10 canonical Fadester slots (`crossfader`, `fader_1`..`fader_8`, `master`), string/index resolution (`vs_fader_slot_from_name`), value clamping `[0.0, 1.0]`, latest `struct vs_audio_frame` snapshot storage, and the 30 Hz `signals_changed` event coalescer (`vs_fader_bridge_should_emit_signals`).
+   - Extends `enum vs_signal_id` (`VS_SIG_FADER_CROSSFADER = 200` .. `VS_SIG_FADER_MASTER = 209`) and `vs_analyzer_get_signal` so any Audio Modulator slot can select `"Fader: Crossfader"`, `"Fader: Fader 1"` .. `"Fader: Fader 8"`, or `"Fader: Master"` as its driving source, and adds `fader_crossfader`, `fader_1`..`fader_8`, `fader_master` uniforms to the Shader Filter.
+   - **Tests (`test-fader-bridge`)**:
+     - `test_fader_slot_lookup_and_clamping`: resolves all 10 slot IDs (`crossfader`, `fader_1`..`fader_8`, `master`), rejects invalid names (`fader_9`, `unknown`), clamps values to `[0.0, 1.0]`, and verifies `vs_analyzer_get_signal` returns the live fader value for `VS_SIG_FADER_CROSSFADER .. VS_SIG_FADER_MASTER` (driving `vs_mod_slot_eval` end-to-end).
+     - `test_signals_event_coalescing_30hz`: verifies `vs_fader_bridge_should_emit_signals` coalesces 60 fps (`dt = 16.67 ms`) updates to at most 30 events/sec (`>= 33.33 ms` between emissions) and suppresses duplicate emissions when signals are unchanged.
+   - **Mutation check**: Disable the `1.0f / 30.0f` coalescing interval check in `vs_fader_bridge_should_emit_signals`, verify `test-fader-bridge` fails non-zero, then revert.
+2. **Step 5.2 -- `obs-websocket` Vendor API & `obs_get_proc_handler()` Integration (`src/obs/vendor-api.h`, `src/obs/vendor-api.c`)**:
+   - Registers `obs-websocket` vendor `"visual-sidechain"` in `obs_module_post_load()` with requests `get_signals`, `get_faders`, and `set_fader_value`, plus coalesced `signals_changed` vendor events (`R-VND-1..3`).
+   - Registers `visual_sidechain_get_signals` and `visual_sidechain_set_fader_slot` on `obs_get_proc_handler()`, and polls `midi_fadester_get_slot_value` on `obs_get_proc_handler()` when Midi Fadester is present.
+   - **Tests**: Full `ctest` suite (`12/12` including `test-fader-bridge` and `check-locale-keys`) + portable OBS 33.0.0 verification (`TESTING.md` 5.1): verify `[visual-sidechain] Registered obs-websocket vendor 'visual-sidechain'` in the OBS 33 log and `Number of memory leaks: 0` on shutdown.
+
 ---
 
 ## 5. Test strategy summary (`R-TST-1..6`)
