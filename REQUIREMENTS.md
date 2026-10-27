@@ -1,182 +1,172 @@
-# Visual Sidechain — Requirements
+# visual-sidechain -- Requirements
 
-**Visual Sidechain** is an open-source audio-reactive FFT shader filter suite and sibling-filter parameter modulator for OBS Studio 33 on Windows x64, designed NVIDIA RTX first.
+Status: 2026-10-27. Updated for operator review (Phase 0: plan only, no code).
+Decisions for the operator (with answers received on 2026-10-27) are recorded in section 13.
 
----
+This file is the source of truth for what Visual Sidechain must do. Rule from
+the project brief: before any forked upstream behavior is removed or replaced,
+the requirement it served is recorded here first.
 
-## 1. Identity, Branding, and Disclosure (`R-ID-*`)
-
-- **`R-ID-1` (Plugin Name):** The human-readable name is **Visual Sidechain**. The binary module name is `visual-sidechain` (`visual-sidechain.dll`).
-- **`R-ID-2` (No "OBS" in Branding):** The word `"OBS"` MUST NOT appear in the plugin's title, branding, repository name, or display names. Display names of filters registered with `obs_register_source` use the `"Visual Sidechain — ..."` prefix.
-- **`R-ID-3` (Third-Party Disclaimer):** `README.md`, release notes, and documentation MUST include the explicit statement:
-  > Visual Sidechain is an independent third-party plugin for OBS Studio. It is not made, endorsed, or supported by the OBS Project or NVIDIA Corporation.
-- **`R-ID-4` (AI Coding Tools Disclosure):** `README.md` and release notes MUST include an honest disclosure that the project is developed with the assistance of AI coding tools under human direction, review, and hardware verification.
-
----
-
-## 2. Licensing & Upstream Attribution (`R-LIC-*`)
-
-- **`R-LIC-1` (Repository License):** The repository license is **GNU General Public License v2.0** (`LICENSE` at commit `cf2f276`). `LICENSE` MUST NOT be altered or replaced without explicit operator instruction.
-- **`R-LIC-2` (Source Header Stance):** All original source files (`src/*.c`, `src/*.h`, `data/effects/*.effect`) authored in this project MUST carry an `SPDX-License-Identifier: GPL-2.0-or-later` header so our code is compatible both with `GPL-2.0-only` plugins and with OBS Studio's `GPL-2.0-or-later` headers.
-- **`R-LIC-3` (All Shaders Original or GPL-Compatible — No Shadertoy Copies):**
-  - Every `.effect` shader shipped in `data/effects/` MUST be 100% original code authored for Visual Sidechain under `GPL-2.0-or-later` (or explicitly verified GPL-2.0-compatible code with full attribution).
-  - **No Shadertoy copies:** Do NOT copy, port, or vendor shaders from Shadertoy (whose default license is `CC BY-NC-SA 3.0`, which is GPL-incompatible) or from `exeldro/obs-shaderfilter`'s `data/examples/` directory.
-- **`R-LIC-4` (Upstream Attribution):** Any code or patterns adapted from third-party open-source projects (`obs-studio` GPL-2.0-or-later, `mmlTools/audio-wave` MIT, `exeldro/obs-move-transition` GPL-2.0, `exeldro/obs-shaderfilter` GPL-2.0-only, or KissFFT BSD-3-Clause) MUST retain upstream copyright notices, license text, and attribution in `THIRD_PARTY_NOTICES.md` and relevant source headers.
-- **`R-LIC-5` (No Unsolicited Upstream Contact):** Never contact `exeldro` or any other upstream author (no issues, PRs, emails, or messages) unless the operator explicitly instructs us to do so.
+Requirement IDs are stable. [PLAN.md](PLAN.md) and commit messages refer to them.
+"obs.h N" and "nv-filters N" refer to the OBS Studio 33.0.0 source tree at tag
+`33.0.0` (`libobs/obs.h` and `plugins/nv-filters/nvidia-videofx-filter.c`).
+"shaderfilter N" refers to `obs-shaderfilter.c` in `exeldro/obs-shaderfilter`
+at commit `73fb5c2` (version 2.6.1, 2026-10-24).
 
 ---
 
-## 3. Target Platform & Build (`R-PLAT-*`)
+## 0. Project identity and scope
 
-- **`R-PLAT-1` (OBS Version):** Target **OBS Studio 33.0.0** (`libobs` API version 33) on **Windows 10/11 x64** (`MSVC` / Visual Studio 2022 Build Tools).
-- **`R-PLAT-2` (GPU Target):** Primary hardware target is **NVIDIA RTX GPUs** on Windows Direct3D 11 (`d3d11`), using OBS `libobs` graphics (`gs_*`) HLSL-compatible `.effect` shaders so all filters run natively in the OBS GPU render pipeline with zero CPU frame readback.
-- **`R-PLAT-3` (Standalone CMake + Shared Local Deps):** The build MUST use CMake `>= 3.28` (`CMAKE_C_STANDARD 17`) and share the local prebuilt dependency cache from `C:\Users\jeffr\Documents\obs-playlister\.deps` (`obs-studio-33.0.0` and `obs-deps-2025-08-23-x64`) in read-only mode without modifying `obs-playlister`.
+| ID | Requirement |
+|----|-------------|
+| R-ID-1 | Visual Sidechain is a suite of FFT-reactive video filters and a sibling-filter Audio Modulator for OBS Studio 33 on Windows x64 (NVIDIA RTX first) that react to music the way Resolume does: any shader parameter or sibling filter setting can follow the live FFT spectrum (`512`-bin texture and `32` log-spaced bands), any custom Hz frequency window, or musical envelopes (`level`, `bass`, `mid`, `high`, `kick`, `snare`, `beat`). |
+| R-ID-2 | Canonical local repository folder: `C:\visual-sidechain` (created and opened as the active workspace by the operator; settled permanently so it is never moved later). `origin`: `https://github.com/jbrick2070/visual-sidechain` (public, branch `main`). Reference project on this PC: `C:\Users\jeffr\Documents\obs-playlister` (read-only; never modified by this project). |
+| R-ID-3 | No "OBS" in the plugin's display name or branding (`Visual Sidechain`), in compliance with the OBS Project's Forum Resource and IP Policy. `README.md` and documentation state clearly that Visual Sidechain is a third-party plugin not made, endorsed or supported by the OBS Project, and include an honest disclosure that it is written with AI coding tools under human direction, review, and hardware verification. |
+| R-ID-4 | If `exeldro/obs-shaderfilter` is forked (`D-2`), the module name (`visual-sidechain`), filter source IDs, hotkey names and locale keys are renamed so Visual Sidechain installs and runs beside an existing `obs-shaderfilter` installation without either plugin clobbering the other. |
+| R-ID-5 | 100% local and open source. No cloud services, no API keys, no paid services, no telemetry, and no Python at runtime or in the build of the plugin itself. |
 
----
+## 1. Licensing and provenance (hard)
 
-## 4. Audio Tap & Routing (`R-TAP-*`)
+| ID | Requirement |
+|----|-------------|
+| R-LIC-1 | `LICENSE` in this repository is GNU General Public License Version 2, June 1991 (commit `cf2f276`). Files we write from scratch carry `Copyright (C) 2026 Jeffrey A. Brick` and `SPDX-License-Identifier: GPL-2.0-or-later` (compatible with distribution in a GPL-2.0 binary). JSON and Markdown files carry no header and are covered by `LICENSE`. |
+| R-LIC-2 | Upstream header inspection of `exeldro/obs-shaderfilter` (checked 2026-10-27 at commit `73fb5c2`, version 2.6.1): `LICENSE` is GPL-2.0 (Version 2, June 1991). `obs-shaderfilter.c` (3,733 lines) has no license header and no "or later" clause; lines 1-3 carry only three attribution lines (`Version 2.0 by Exeldro`, `Version 1.21 by Charles Fettinger`, `original version by nleseul`). `obs-shaderfilter.h` is 0 bytes. `resource.rc.in:22` has `VALUE "LegalCopyright", "(C) Exeldro"`. No file in `exeldro/obs-shaderfilter` grants "or (at your option) any later version". In `data/examples/`, six shaders by SkeletonBow (`circle-mask-filter.shader`, `corner-pin.shader`, `dead-pixel-fixer.shader`, `heat-wave-simple.shader`, `hue-rotaton.shader`, `walking-dead-pixel-fixer.shader`) state `License: GNU General Public License, version 2` (`hue-rotaton.shader:19-21` writes out the GPL notice for `version 2 as published by the Free Software Foundation` without the "or any later version" phrase). Result: `exeldro/obs-shaderfilter` is **GPL-2.0-only**. Any file forked or derived from it must remain `GPL-2.0-only` and retain the nleseul, Charles Fettinger and Exeldro copyright/attribution notices (including `cmake/windows/resources/resource.rc.in` carrying `(C) Exeldro, (C) ${CURRENT_YEAR} ${PLUGIN_AUTHOR}`), and the combined plugin is distributed under GPL-2.0. |
+| R-LIC-3 | Upstream header inspection of `mmlTools/audio-wave` (checked 2026-10-27 at commit `d50df81`): `LICENSE` is GPL-2.0 (Version 2, June 1991). None of its C++ source files (`src/audio-pulse-filter.cpp`, `src/audio-shader-source.cpp`, `src/plugin-main.cpp`) carry a license header or an "or later" clause, so it is also GPL-2.0-only. Because Layer 2 (`R-ANA-1`) requires pure C with no dependencies, our analysis engine is written in clean C rather than copying C++ from `audio-wave`; if any code or shader is borrowed from `mmlTools/audio-wave`, its copyright notice and GPL-2.0 terms are kept. |
+| R-LIC-4 | `exeldro/obs-move-transition` (GPL-2.0, checked at commit `c1f1e3d`, `move-value-filter.c`) is reference only: studied for how a filter enumerates sibling filters and their `obs_properties_t` definitions on `obs_filter_get_parent` and updates target settings in `video_tick`. Its code is not copied. |
+| R-LIC-5 | Forbidden sources (never copied, translated or paraphrased): (1) `phandasm/waveform` (GPL-3.0, which is incompatible with GPL-2.0-only and would force GPL-3.0); (2) `Limeth/obs-shaderfilter-plus` (no license file, so all rights are reserved; its per-track FFT concept is reimplemented from scratch in C from this specification only); (3) **Shadertoy shaders**, which default to `CC BY-NC-SA 3.0 Unported` (non-commercial, GPL-incompatible) — **all shaders in Visual Sidechain must be original or explicitly GPL-compatible, with zero Shadertoy copies** (operator instruction 2026-10-27). |
+| R-LIC-6 | Shader asset provenance audit (`exeldro/obs-shaderfilter/data/examples/`): inspection on 2026-10-27 found that `intensity-scope.shader`, `page-peel.shader`, `rain-window.shader` and `seascape.shader` carry explicit `Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported` headers, and `simplex_noise.shader`, `smart_denoise.shader`, `thermal.shader`, `tv-crt-subpixel.shader`, `VCR.shader`, `VHS.shader`, `voronoi-pixelation.shader` and `zoom_blur_transition.shader` are Shadertoy adaptations without a GPL-compatible grant. Therefore, `data/examples/` is NOT shipped; Visual Sidechain ships only original shaders written by us under `GPL-2.0-or-later`. |
+| R-LIC-7 | Never contact Exeldro or any other upstream author unless the operator explicitly instructs us to do so. |
 
-- **`R-TAP-1` (Default Audio Input is Track 1 / Main Mix):**
-  - Every FFT shader filter and the Audio Modulator MUST default its `"Audio Source"` setting to **Track 1 (Main Mix)** (`__MAIN_MIX__`), tapped via `obs_get_audio()` and `audio_output_connect(audio_t *, 0, NULL, raw_audio_callback, param)` on mixer index `0`.
-  - Adding any Visual Sidechain filter to a video source MUST immediately react to Track 1 audio with zero manual setup required.
-- **`R-TAP-2` (Selectable Named Audio Sources & Parent Source):**
-  - In addition to **Track 1 (Main Mix)** (default), the `"Audio Source"` dropdown MUST offer:
-    1. **Track 1 (Main Mix)** (`__MAIN_MIX__`, default)
-    2. **Track 2..6** (`__TRACK_2__` .. `__TRACK_6__` via `audio_output_connect` mixer indices `1..5`)
-    3. **Parent Source Audio** (`__PARENT__` — the video source to which the filter is attached, if it carries audio)
-    4. **Any Named Audio-Capable OBS Source** (`OBS_SOURCE_AUDIO` enumerated via `obs_enum_sources`), tapped via `obs_source_add_audio_capture_callback`.
-- **`R-TAP-3` (Shared Audio Hub):** If multiple filters tap the same audio source or Track 1..6, a reference-counted shared hub (`vsc_audio_hub`) MUST attach only a single OBS audio callback and run the FFT/DSP analyzer once per audio block, sharing the resulting spectrum and feature snapshot across all subscribed filters.
-- **`R-TAP-4` (Weak Source References & Lifecycle Safety):** Named audio sources MUST be held via `obs_weak_source_t` (`obs_source_get_weak_source`), never raw `obs_source_t *` across ticks. If a tapped source is renamed, destroyed, or not yet created at scene-load time, the hub MUST lazily resolve the source by name when available and safely output zeroed audio features while missing.
-- **`R-TAP-5` (Sample Rate & Channel Agnostic):** The tap MUST accept whatever sample rate (`44100 Hz`, `48000 Hz`, etc.) and channel count (`mono`, `stereo`, `surround`) OBS provides in float planar format (`AUDIO_FORMAT_FLOAT_PLANAR`), downmixing active channels to mono (and optionally tracking L/R stereo difference) before feeding the lock-free ring buffer.
+## 2. Target platform, toolchain and install layout
 
----
+| ID | Requirement |
+|----|-------------|
+| R-PLAT-1 | Target: Windows 11 x64, OBS Studio 33.0.0 or later, NVIDIA RTX GPU first (development and test machine has an NVIDIA RTX 5080). |
+| R-PLAT-2 | Install layout is the OBS 33 layout and only that layout: `C:\ProgramData\obs-studio\plugins\visual-sidechain\visual-sidechain.dll` with data in `C:\ProgramData\obs-studio\plugins\visual-sidechain\data\` (`manifest.json` in `data\`, locale in `data\locale\`, shaders in `data\shaders\`). Source: `frontend/plugin-manager/PluginModuleLoader_Windows.cpp` at tag `33.0.0`. |
+| R-PLAT-3 | Legacy plugin layouts (`plugins\<name>\bin\64bit\<name>.dll` and `C:\Program Files\obs-studio\obs-plugins\64bit\`) are never built, installed or packaged. Visual Sidechain must load in OBS 33.0.0 without a `Legacy` chip in the Plugin Manager. |
+| R-PLAT-4 | Portable-mode zip uses the OBS 33 portable layout: `<OBS root>\plugins\visual-sidechain\visual-sidechain.dll` and `<OBS root>\plugins\visual-sidechain\data\`. |
+| R-PLAT-5 | Portable OBS 33.0.0 on this PC (`C:\Users\jeffr\OBS-Studio-33-Portable`) is used for automated and smoke testing: started with working directory `C:\Users\jeffr\OBS-Studio-33-Portable\bin\64bit` and closed gracefully with `CloseMainWindow()`. |
+| R-PLAT-6 | Toolchain: Visual Studio 2022 Build Tools 17.14 (MSVC 14.44), Windows SDK `10.0.26100.0`, CMake 4.4.0 (`cmake_minimum_required(VERSION 3.28...3.30)`), generator `Visual Studio 17 2022` pinned to `x64,version=10.0.26100.0`. Warnings are errors (`CMAKE_COMPILE_WARNING_AS_ERROR` ON). |
+| R-PLAT-7 | `buildspec.json` pins `obs-studio` `33.0.0` (SHA-256 `bdab14146289f39be6c12d5165812ba5b37b5231f857cb84aa5e4bafeaaa8686`) and matching `prebuilt` and `qt6` `2026-10-23` dependencies from `obs-playlister/buildspec.json`, with the nested configure argument list fix in `cmake/common/buildspec_common.cmake` (`-DENABLE_PLUGINS:BOOL=OFF`, `-DENABLE_FRONTEND:BOOL=OFF`, `-DENABLE_SCRIPTING:BOOL=OFF`). |
+| R-PLAT-8 | `data/manifest.json` is generated from `buildspec.json` at configure time and installed into `data/` so the OBS 33 Plugin Manager displays the plugin name and version; `plugin-main.c` also exports `obs_module_name()` and `obs_module_description()`. |
+| R-PLAT-9 | CI runs on GitHub Actions using the `windows-2022` runner (`windows-2025` lacks VS 2022), builds the plugin and Inno Setup installer, and runs `ctest --test-dir build_x64 -C <config> --output-on-failure --no-tests=error`. macOS and Ubuntu CI jobs are disabled (Windows x64 target only). |
+| R-PLAT-10 | The DLL and CI-built `.exe` installer ship unsigned (code signing requires a paid certificate or external service, conflicting with R-ID-5); this and its Smart App Control / WDAC implications are stated in `README.md` and `TESTING.md`. |
 
-## 5. Real-Time FFT & DSP Analyzer (`R-ANA-*`)
+## 3. Layer 1: Audio tap
 
-- **`R-ANA-1` (Zero-Allocation Audio Thread):** The OBS audio callback (`obs_source_audio_capture_t` or `audio_output_callback_t`) MUST be strictly real-time safe: no heap allocations (`malloc`/`bfree`), no blocking mutexes, no logging, and no `obs_source_update` calls on the audio thread.
-- **`R-ANA-2` (High-Resolution Windowed FFT):**
-  - Maintain a sliding 2048-sample Hann-windowed frame (`~42.7 ms` at `48 kHz`, hop size `512` samples or per-render-tick latest window) and compute a real-to-complex FFT yielding **1025 magnitude bins** (`~23.4 Hz` per bin at `48 kHz`).
-  - Downsample/map the positive frequencies into:
-    1. **512 normalized FFT bins (`fft_bins[512]`)**: mapped from dBFS (`-70 dBFS .. 0 dBFS`, configurable floor/ceiling) to `[0.0 .. 1.0]` with per-bin configurable asymmetric attack/release smoothing (`attack_ms`, `release_ms`).
-    2. **32 logarithmic 1/3-octave spectrum bands (`bands[32]`)** and **32 peak-hold values (`band_peaks[32]`)** spanning `20 Hz` to `20 kHz`.
-    3. **512 latest time-domain mono waveform samples (`waveform[512]`)** normalized to `[-1.0 .. 1.0]` (and `[0.0 .. 1.0]` for texture upload).
-- **`R-ANA-3` (Arbitrary Custom Hz FFT Band Extractor):**
-  - Every filter and modulator slot MUST allow the user to select either a preset audio feature OR a **Custom FFT Frequency Window (`freq_low_hz` .. `freq_high_hz`)** anywhere from `20 Hz` to `20000 Hz`.
-  - Given `[freq_low_hz, freq_high_hz]`, the analyzer integrates the exact FFT bins `[k_low .. k_high]` using one of three selectable modes:
-    - **Average Band Energy** (RMS of bins in range)
-    - **Peak Bin Magnitude** (max bin in range, great for tracking a synth lead or fundamental note)
-    - **Band Spectral Flux** (positive frame-to-frame magnitude increase in `[k_low .. k_high]`, ideal for transient/onset triggering in a specific frequency range).
-- **`R-ANA-4` (Standard Musical Envelopes & Onset Features):**
-  - Alongside the full 512-bin FFT, 32 log bands, and Custom Hz Window, compute:
-    - `level` (wideband RMS `0.0..1.0`) and `peak` (wideband peak `0.0..1.0`)
-    - `bass` (`20–250 Hz`), `sub_bass` (`20–60 Hz`), `mid` (`250–2000 Hz`), `high` (`2000–20000 Hz`)
-    - `spectral_centroid` (normalized brightness center of mass `0.0..1.0`)
-    - `spectral_flux` (full-spectrum positive onset flux `0.0..1.0`)
-    - `kick` (`40–120 Hz` spectral-flux onset detector with adaptive moving-average threshold)
-    - `snare` (`150–4000 Hz` transient + high-frequency noise burst detector)
-    - `beat_phase` (`0.0..1.0` sawtooth phase locked to detected kick/onset tempo with decay fallback).
-- **`R-ANA-5` (Silence & NaN/Inf Protection):** Below the noise gate threshold (`gate_db`, default `-65 dBFS`), all bins and envelopes decay smoothly to `0.0`. Every output float MUST be sanitized (`isfinite`) and clamped to `[0.0, 1.0]`.
+| ID | Requirement |
+|----|-------------|
+| R-TAP-1 | Every Visual Sidechain filter can tap audio from one of three sources selectable in its Properties, with **Track 1 (the main mix) as the default** on every filter (operator instruction 2026-10-27): (1) **Main Mix / Track 1..6** (default: **Track 1**, `mix_idx = 0`, the main mix sent to the stream and recording); (2) **Any one audio source** in the scene collection, chosen from a dropdown of `OBS_SOURCE_AUDIO` sources; (3) **This source's own audio** (the parent source to which the filter is attached). |
+| R-TAP-2 | Track mix tap (`mix_idx` `0..5`, `MAX_AUDIO_MIXES = 6`): uses `obs_add_raw_audio_callback(mix_idx, &conversion, callback, param)` and detaches with `obs_remove_raw_audio_callback(mix_idx, callback, param)` (`obs.h:932-934`, `obs.c:3153-3164`). Requests `AUDIO_FORMAT_FLOAT_PLANAR` at OBS's active audio sample rate (`audio_output_get_sample_rate(obs_get_audio())`) and channel count. |
+| R-TAP-3 | Specific source tap: resolves the target `obs_source_t *` by name (`obs_get_source_by_name`), verifies `(obs_source_get_output_flags(target) & OBS_SOURCE_AUDIO) != 0`, stores only an `obs_weak_source_t *` reference (`obs_source_get_weak_source`) so the filter never keeps a deleted source alive, attaches `obs_source_add_audio_capture_callback(target, callback, param)`, and detaches with `obs_source_remove_audio_capture_callback(target, callback, param)` (`obs.h:1352-1355`, `obs-source.c:5572-5594`). If a named source is not yet present when the filter loads (source creation order at OBS startup) or is recreated, `video_tick` retries resolution once per second and logs when attached. |
+| R-TAP-4 | Filtered source's own audio tap: resolves `obs_filter_get_parent(filter)` (`obs.h:1167`), verifies `(obs_source_get_output_flags(parent) & OBS_SOURCE_AUDIO) != 0`, holds an `obs_weak_source_t *` to the parent, and attaches `obs_source_add_audio_capture_callback`. If the parent source has no audio output capability (for example an Image or Color Source), the filter logs a clear warning `[visual-sidechain]` and shows a warning in Properties rather than failing silently. |
+| R-TAP-5 | Multi-channel downmix and mute handling: incoming planar float frames (`audio_data->data[ch]`) are downmixed to mono by averaging active channels (`0.5f * (L + R)` for stereo, `1/C * sum` for `C` channels). Non-finite samples (`NaN`, `Inf`) are sanitised to `0.0f` at the tap boundary. For `obs_source_audio_capture_t`, when `muted` is true, samples are treated as silence (`0.0f`) by default so muted sources decay cleanly to zero, with an explicit checkbox "React even when source is muted (ghost sidechain)" for VJs who route a muted click/kick track into OBS solely to drive visuals. |
+| R-TAP-6 | Clean teardown: on filter `destroy` or tap reconfiguration, the raw audio callback or source audio capture callback is removed before any analyzer or ring-buffer memory is freed. |
 
----
+## 4. Layer 2: Analysis (in C with no dependencies)
 
-## 6. GPU FFT Texture Pipeline & Built-in FFT-Reactive Shader Filters (`R-SHD-*`)
+| ID | Requirement |
+|----|-------------|
+| R-ANA-1 | Pure C17 implementation in `src/core/`, using only standard C math/memory headers and `libobs` util (`bmem`, `platform`, `threading`), with zero external libraries (no FFTW, no KissFFT, no C++ standard library). All `src/core/` modules compile into headless CTest executables (`R-TST-1`). |
+| R-ANA-2 | Audio-to-graphics ring buffer (`src/core/audio-ring.c`): lock-free or mutex-guarded fixed-capacity circular buffer of mono `float` samples with capacity **32,768 samples** (~682 ms at 48 kHz, covering the 4096-sample low-band FFT window plus the maximum `+500` ms sync offset with margin) written by the audio callback and read on the graphics thread during `video_tick`. Allocation happens only at creation or sample-rate change, never on the audio thread. |
+| R-ANA-3 | Audio/video sync offset (`sync_offset_ms`, slider **`-200` ms to `+500` ms**, default `0` ms): compensates when the picture trails or leads the sound (including multi-frame latency from USB capture cards or NVIDIA RTX Background Removal / Blur filters). A positive offset (`+N` ms, picture trails sound) delays the analysis read cursor by `round(sync_offset_ms * sample_rate / 1000.0)` samples behind the ring buffer write head so visual transients align with the delayed video frame. A negative offset (`-N` ms, sound trails picture or anticipation desired) advances the beat phase (`beat`) forward by `|sync_offset_ms|` using the estimated tempo period and uses zero-delay samples for instantaneous spectral signals. Phase 3 Step 3.4 measures actual audio-to-picture lag in OBS 33 and verifies the slider range covers it. |
+| R-ANA-4 | **Dual-resolution windowed FFT for bass resolution + transient speed** (`src/core/fft.c`): At 48 kHz, a 2048-point FFT has `23.44 Hz` bin spacing, which gives only two bins across sub-bass (`20..60 Hz`, at `23.4 Hz` and `46.9 Hz`) and makes sub-bass vs. kick separation rough. The analyzer therefore runs **two Hann-windowed radix-2 Cooley-Tukey FFTs** aligned to the same end-of-window sample cursor: (1) a **4096-point FFT** (`85.3 ms` window, **`11.72 Hz` bin spacing** at 48 kHz) used exclusively for low frequencies ($\le 250\text{ Hz}$: sub-bass $20 - 60\text{ Hz}$ with ~4 bins, bass $60 - 250\text{ Hz}$ with ~16 bins, low log-spectrum bands `0..10`, low `fft_bins`, and the `kick` $40 - 130\text{ Hz}$ spectral-flux detector); and (2) a **2048-point FFT** (`42.7 ms` window, `23.44 Hz` bin spacing) used for mid/high frequencies ($> 250\text{ Hz}$: `mid` $250 - 4000\text{ Hz}$, `high` $4000 - 20000\text{ Hz}$, upper spectrum bands `11..31`, upper `fft_bins`, and fast `snare` transient detection). Precomputed Hann coefficients and twiddle tables are initialized once for both sizes. |
+| R-ANA-5 | **Log-spaced 32-band spectrum, 512-bin texture spectrum, and custom Hz band extractor** (`src/core/spectrum.c`): (1) Maps the dual-resolution FFT magnitudes (4096-pt bins for $20 - 250\text{ Hz}$, 2048-pt bins for $250 - 20000\text{ Hz}$) onto **32 logarithmically spaced bands** spanning $20\text{ Hz}$ to $20\text{ kHz}$ ($f_k = 20 \cdot (1000)^{k/32}$) with fractional bin interpolation; (2) produces a **512-bin normalized FFT curve** (`fft_bins[512]` in `[0.0, 1.0]`, log-frequency mapped from $20\text{ Hz}$ to $20\text{ kHz}$ using the 4096-pt FFT below $250\text{ Hz}$ and 2048-pt FFT above $250\text{ Hz}$) plus **512 time-domain waveform samples** (`waveform[512]` mapped to `[0.0, 1.0]`) for full-spectrum GPU shaders; (3) provides `vs_spectrum_extract_hz_band(freq_low_hz, freq_high_hz, mode)` so any filter or modulator slot can dial in an arbitrary **`[freq_low_hz .. freq_high_hz]`** window ($20 - 20000\text{ Hz}$, using Average Energy, Peak Bin, or Band Spectral Flux); and (4) computes summary energies for `level` (time-domain RMS), `sub_bass` ($20 - 60\text{ Hz}$), `bass` ($20 - 250\text{ Hz}$), `mid` ($250 - 4000\text{ Hz}$), `high` ($4000 - 20000\text{ Hz}$), `spectral_centroid`, and `spectral_flux`. |
+| R-ANA-6 | Per-band auto-gain and manual dB range (`src/core/envelope.c`): when auto-gain is enabled (default ON), each band and summary signal tracks a running peak envelope (fast rise, slow decay over ~4 s) bounded below by a noise-gate floor (`gate_db`, default `-55` dBFS) so silence outputs `0.0` rather than amplifying background noise, and normalizes active music into `[0.0, 1.0]`. When auto-gain is switched off, normalization maps `[floor_db, ceiling_db]` (defaults `-45` dB to `-6` dB) linearly in dB to `[0.0, 1.0]`. |
+| R-ANA-7 | Attack and release smoothing (`src/core/envelope.c`): every scalar output (`level`, `sub_bass`, `bass`, `mid`, `high`, `kick`, `snare`), each of the 32 spectrum bands, and the 512 FFT texture bins apply frame-rate-independent asymmetric one-pole exponential smoothing using `attack_ms` (`0..500` ms, default `10` ms) when rising and `release_ms` (`0..2000` ms, default `180` ms) when falling. When no new audio frames have arrived for more than 50 ms (paused media or stopped source), target energy drops to `0.0` so envelopes decay smoothly to zero instead of freezing at their last value. |
+| R-ANA-8 | Onset detection (`kick`, `snare`) (`src/core/onset.c`): computes half-wave rectified spectral flux in the 4096-point sub-bass/kick band ($40 - 130\text{ Hz}$, ~8 bins at 48 kHz) for `kick` and in the 2048-point snare body/transient band ($150 - 4000\text{ Hz}$ weighted with high-frequency snap) for `snare`. An onset fires when flux exceeds a running local mean plus a sensitivity-scaled threshold (above the noise gate) outside a refractory cooldown window (default `100` ms), triggering an envelope peak in `[0.0, 1.0]` that decays with `release_ms`. |
+| R-ANA-9 | Beat tracking and phase (`beat`) (`src/core/onset.c`): estimates tempo in the range `60..180` BPM from recent onset intervals and maintains a continuous beat phase `beat` in `[0.0, 1.0)` (or pulse-shaped beat curve) that advances with frame $\Delta t$, phase-aligns on detected kick/beat onsets, and freewheels smoothly across short fills or dropouts. |
+| R-ANA-10 | Complete output struct (`struct vs_audio_frame`): each analysis step produces normalized scalar floats in `[0.0, 1.0]` (`level`, `sub_bass`, `bass`, `mid`, `high`, `kick`, `snare`, `beat`, `spectral_centroid`, `spectral_flux`), `float spectrum[32]` in `[0.0, 1.0]`, `float fft_bins[512]` in `[0.0, 1.0]`, and `float waveform[512]` in `[0.0, 1.0]`. Shared tap+analysis instances compute at most once per OBS video frame (`obs_get_video_frame_time()`). |
 
-- **`R-SHD-1` (Shared GPU FFT Textures Bound to Every Shader):**
-  - Once per video render tick, the shared hub uploads the latest analyzer snapshot into two dynamic GPU textures (`gs_texture_t`) shared by all filters reading that audio tap:
-    1. **`vsc_fft_tex` (`512 x 2`, `GS_R32F`)**:
-       - Row 0 (`v = 0.25`): `512` smoothed FFT magnitude bins (`0.0..1.0`).
-       - Row 1 (`v = 0.75`): `512` time-domain waveform samples mapped to `0.0..1.0` (`0.5` = silence).
-    2. **`vsc_bands_tex` (`32 x 1`, `GS_R32F`)**:
-       - `32` logarithmic spectrum bands (`0.0..1.0`).
-  - Every Visual Sidechain `.effect` shader receives `vsc_fft_tex`, `vsc_bands_tex`, the user's tuned `audio_react` scalar (computed from their selected preset or Custom Hz FFT window after gain/threshold/curve/attack/release), and the full set of `audio_*` uniforms (`audio_bass`, `audio_mid`, `audio_high`, `audio_kick`, `audio_snare`, `audio_beat_phase`, `audio_spectral_centroid`, `audio_spectral_flux`, `elapsed_time`, `uv_size`).
-- **`R-SHD-2` (Built-in FFT-Reactive Filter Suite — 10 GPU Shader Filters):**
-  The plugin MUST register the following 10 original GPU `.effect` filters (`OBS_SOURCE_TYPE_FILTER`, `OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW` or `obs_source_process_filter_begin/end`):
-  1. **`vsc_filter_edge_aura` ("Visual Sidechain — FFT Spectral Aura / Edge Glow")**:
-     - Detects the alpha silhouette (e.g., webcam cutout after **NVIDIA Background Removal**) or frame border using multi-tap alpha/luma gradient sampling, and maps perimeter angle `theta` or edge position directly into `vsc_fft_tex` / `vsc_bands_tex`. Low frequencies glow at the base/sides while mids and highs shimmer around the contour, with configurable aura width, color gradient, and bloom intensity.
-  2. **`vsc_filter_displacement` ("Visual Sidechain — FFT Wave Warp & Glitch")**:
-     - Spatial FFT UV distortion: samples `vsc_fft_tex` across screen coordinates so low FFT bins drive broad sinusoidal/liquid shear waves, mid bins drive fine ripple waves, and high-frequency spectral flux triggers horizontal scanline glitch tears and RGB block offsets.
-  3. **`vsc_filter_prism` ("Visual Sidechain — FFT Chromatic Prism & Bloom")**:
-     - Spectral RGB/prism dispersion where bass, mid, and high FFT energy (or custom Hz bins) independently drive radial/directional channel separation, spectral hue shift, and dual-tap glow/bloom above a brightness threshold.
-  4. **`vsc_filter_visualizer` ("Visual Sidechain — FFT Visualizer Overlay")**:
-     - Renders GPU-accelerated FFT visualizations directly from `vsc_fft_tex` and `vsc_bands_tex` composited over the source video (or over transparent/solid background):
-       - **Mode 0: Spectrum Bars** (32 log bands or 128/512 FFT bins with rounded caps and peak-hold markers)
-       - **Mode 1: Polar / Circular Spectrum Ring** (radial frequency bars wrapped around a center point or webcam)
-       - **Mode 2: Spectrogram / Waterfall** (rolling 2D history texture `512 x 256` updated one row per frame showing frequency vs. time in heat/neon palettes)
-       - **Mode 3: Oscilloscope Waveform** (anti-aliased glowing ribbon from row 1 of `vsc_fft_tex`).
-  5. **`vsc_filter_zoom_pulse` ("Visual Sidechain — FFT Zoom Pulse")**:
-     - Drives radial scale zoom, barrel/lens punch, and subtle edge blur from any FFT band / kick onset / custom Hz window around a configurable center point, with clamp-to-edge/mirror UV padding so borders never clip to black.
-  6. **`vsc_filter_kaleidoscope` ("Visual Sidechain — FFT Kaleidoscope")**:
-     - Polar N-fold mirror reflection (`2..24` segments) where FFT bass/kick drives radial zoom and segment pulse, mid/centroid drives continuous or beat-stepped rotation, and each polar angle samples `vsc_fft_tex` for per-ray spectral ripple.
-  7. **`vsc_filter_feedback` ("Visual Sidechain — FFT Feedback Trails")**:
-     - Uses ping-pong GPU render targets (`gs_texrender_t` `accum_a` / `accum_b`) to blend the current video frame with the transformed previous frame: FFT energy controls trail persistence/decay (`0.0..0.98`), radial expansion/zoom drift, slight rotation, and spectral hue shift on the echo trails.
-  8. **`vsc_filter_strobe` ("Visual Sidechain — FFT Strobe & Flash")**:
-     - FFT onset / custom-Hz band triggered strobe supporting **Brightness/Exposure Burst**, **Color Tint Flash**, **Invert Flash**, and **Rhythmic Black Gate**, equipped with a mandatory **Max Strobe Rate (Hz)** (`1..30 Hz`) and **Max Duty Cycle / Intensity** limiter.
-  9. **`vsc_filter_mirror` ("Visual Sidechain — FFT Mirror & Split")**:
-     - 2-way horizontal/vertical mirror, 4-way quad mirror, diagonal mirror, and multi-slice split bounce where FFT bins offset slice positions or flip mirror axes on beat onsets.
-  10. **`vsc_filter_custom_shader` ("Visual Sidechain — Custom FFT Shader")**:
-      - Loads a user-selected `.effect` shader file, exposes its declared `uniform` parameters in the Filter Properties UI, and automatically binds `vsc_fft_tex`, `vsc_bands_tex`, `vsc_prev_frame_tex` (optional ping-pong feedback texture), and all `audio_*` uniforms.
-- **`R-SHD-3` (Common Per-Filter FFT Controls):**
-  - Every built-in filter MUST expose a consistent **"FFT & Audio Reactivity"** control group:
-    - `audio_source` (default: **Track 1 (Main Mix)**)
-    - `fft_driver` (`Custom Hz Band`, `Sub-Bass 20–60 Hz`, `Bass 60–250 Hz`, `Mid 250–2000 Hz`, `High 2–20 kHz`, `Kick Onset`, `Snare Onset`, `Spectral Flux`, `Spectral Centroid`, `Beat Phase`, `Full RMS`)
-    - `freq_low_hz` (`20..20000 Hz`) and `freq_high_hz` (`20..20000 Hz`) + `band_mode` (`Average`, `Peak Bin`, `Spectral Flux`)
-    - `gain` (`0.0..10.0`), `threshold` (`0.0..1.0`), `attack_ms` (`1..500 ms`), `release_ms` (`10..2000 ms`), `curve` (`Linear`, `Exponential`, `Logarithmic`, `S-Curve`, `Gate`), `amount` (`-2.0..2.0`), `mix` (`0.0..1.0`).
-- **`R-SHD-4` (Graphics Context & Render Target Hygiene):**
-  - All `gs_effect_create_from_file`, `gs_texrender_create`, `gs_texture_create`, and `gs_effect_destroy` calls MUST occur inside `obs_enter_graphics()` / `obs_leave_graphics()`.
-  - Ping-pong `gs_texrender_t` buffers (`vsc_filter_feedback`, `vsc_filter_visualizer` waterfall, `vsc_filter_custom_shader`) MUST resize automatically when the parent source's `cx`/`cy` changes and free cleanly in `filter_destroy`.
-  - If `cx == 0 || cy == 0` or an effect fails to compile, the filter MUST fall back to `obs_source_skip_video_filter(context)` without crashing.
+## 5. Layer 3a: FFT-reactive shader filters
 
----
+| ID | Requirement |
+|----|-------------|
+| R-SHD-1 | Shader filters receive the analysis signals as `float` uniforms every frame: `audio_level`, `audio_sub_bass`, `audio_bass`, `audio_mid`, `audio_high`, `audio_kick`, `audio_snare`, `audio_beat`, `audio_spectral_centroid`, `audio_spectral_flux`, and `audio_custom_band` (the user's tuned `[freq_low_hz .. freq_high_hz]` window on that filter). If `exeldro/obs-shaderfilter` is forked (`D-2`), its existing `audio_peak` and `audio_magnitude` uniforms (`shaderfilter 256-257, 656-659, 3086-3091`) are also populated so shaders written for `obs-shaderfilter` work unmodified. |
+| R-SHD-2 | Shader filters receive two dynamic GPU textures updated once per video frame on the graphics thread inside `obs_enter_graphics` / `obs_leave_graphics` via `gs_texture_set_image`: (1) `uniform texture2d audio_spectrum;` (`32x1` pixels, `GS_R32F`), where UV `(u, 0.5)` returns the 32-band log spectrum in `[0.0, 1.0]`; and (2) `uniform texture2d audio_fft;` (`512x2` pixels, `GS_R32F`), where Row 0 (`v = 0.25`) holds the 512 high-resolution log-frequency FFT bins (`4096`-pt low bands merged with `2048`-pt mid/high bands) and Row 1 (`v = 0.75`) holds the 512 time-domain waveform samples. |
+| R-SHD-3 | **Built-in FFT-reactive shader suite (all original `GPL-2.0-or-later`, zero Shadertoy copies, operator instruction 2026-10-27)**: Visual Sidechain ships 9 original FFT-reactive shaders in `data/shaders/` (accessible both as presets/dedicated filters and via the Custom FFT Shader filter): (1) **`fft-spectral-aura.shader`** (Spectral Edge / Border Aura:glow around frame or alpha cutout after NVIDIA Background Removal where perimeter angle/position maps to `audio_fft` / `audio_spectrum` bins); (2) **`fft-wave-warp-glitch.shader`** (Displacement / Wave Warp / Glitch: low FFT bins drive large sinusoidal warps, mid bins drive fine ripples, high-frequency flux triggers horizontal scanline glitch slices); (3) **`fft-chromatic-prism-bloom.shader`** (Chromatic Prism / Color Grading / Bloom: bass, mid, and high FFT bins independently drive radial RGB dispersion, hue shift, and highlight bloom); (4) **`fft-visualizer-overlay.shader`** (FFT Visualizer Overlays: 32/512-bin spectrum bars with peak-hold, polar/circular spectrum ring, and oscilloscope waveform composited over video); (5) **`fft-zoom-pulse.shader`** (Zoom Pulse: radial scale punch, barrel lens warp, and edge vignette driven by `audio_kick` / `audio_bass` / custom Hz band); (6) **`fft-kaleidoscope.shader`** (Kaleidoscope: N-fold polar mirror symmetry where rotation, zoom, and per-angle radial offset sample `audio_fft`); (7) **`fft-feedback-trails.shader`** (Feedback Trails: uses `previous_output` ping-pong render target so FFT energy drives motion-trail persistence/decay, zoom drift, and spectral hue shift); (8) **`fft-strobe-flash.shader`** (Strobe & Flash: onset/flux-gated brightness, tint, or invert flash with a configurable max flash rate Hz cap); and (9) **`fft-mirror-split.shader`** (Mirror & Split: 2-way/4-way/diagonal/slice mirror where FFT bins displace slices or flip mirror axes on beats). |
+| R-SHD-4 | Explicit compile/load error reporting: if a shader file is missing or fails HLSL compilation (`gs_effect_create` returns `NULL`), the filter logs the exact compiler error prefixed with `[visual-sidechain]`, displays the compiler error text in a read-only info property in the filter's Properties window, and passes the unmodified source texture through (`obs_source_skip_video_filter`) rather than rendering black or crashing. |
 
-## 7. Sibling-Filter Audio Modulator & NVIDIA RTX Integration (`R-MOD-*`, `R-NV-*`)
+## 6. Layer 3b: Audio Modulator filter
 
-- **`R-MOD-1` (Keep Generic Modulator for Sibling Filters):**
-  - Register **`vsc_modulator` ("Visual Sidechain — Audio Modulator")**, a pass-through video filter (`obs_source_skip_video_filter`) that enumerates sibling filters on the same parent source (`obs_source_enum_filters`), inspects their `obs_properties_t` (`obs_source_properties`), and drives up to **8 modulation slots** per instance.
-  - Default audio input is **Track 1 (Main Mix)**.
-- **`R-MOD-2` (Mapping Math & FFT Custom Hz Support):**
-  - Each slot selects:
-    - Target sibling filter (by name) + target numeric property (`OBS_PROPERTY_FLOAT` or `OBS_PROPERTY_INT`)
-    - Audio driver: any standard feature OR a **Custom FFT Hz Range (`freq_low_hz .. freq_high_hz`)** (`Average`, `Peak Bin`, `Spectral Flux`)
-    - `gain`, `threshold`, `attack_ms`, `release_ms`, `curve`, `invert`, `output_min`, and `output_max`.
-- **`R-MOD-3` (Batched Updates, Epsilon Gate, and Rate Divider for NVIDIA RTX Filters):**
-  - **First-class compatibility with OBS 33's `nv-filters` (`nvidia-videofx-filter.c`)**:
-    1. **NVIDIA Blur (`nv_blur_filter`)** — `intensity` (`0.0..1.0`)
-    2. **NVIDIA Background Blur (`nv_background_blur_filter`)** — `intensity` (`0.0..1.0`)
-    3. **NVIDIA Background Removal (`nv_greenscreen_filter`)** — `threshold` (`0.0..1.0`) and `processing_interval` (`1..4`).
-  - Because `nvvfx_filter_update` in OBS 33 calls `NvVFX_SetF32` + `NvVFX_Load` when `intensity` changes, `vsc_modulator` MUST:
-    - Batch all active slots targeting the same sibling filter into a single `obs_source_update` call per tick.
-    - Gate updates with an epsilon check (`|new_val - last_sent_val| >= epsilon`, default `0.002`) so idle or steady audio makes **zero** `obs_source_update` calls.
-    - Provide an **Update Rate Divider** (`Every Frame`, `Every 2nd Frame`, `Every 4th Frame`) per slot/target so heavy SDK filters like `NvVFX_Load` stay smooth at 60 fps.
-- **`R-MOD-4` (Baseline Restoration):**
-  - When a slot is disabled, retargeted, or the Audio Modulator filter is disabled/removed, restore the target property's baseline value captured before modulation began.
+| ID | Requirement |
+|----|-------------|
+| R-MOD-1 | The **Audio Modulator** filter (`visual_sidechain_modulator_filter`, display name `Visual Sidechain: Audio Modulator`) is a video filter (`OBS_SOURCE_TYPE_FILTER`, `OBS_SOURCE_VIDEO`) whose `video_render` calls `obs_source_skip_video_filter` immediately (zero GPU render passes of its own) and whose `video_tick` drives numeric settings on any other filter attached to the same parent source. Default audio input is **Track 1 (the main mix)** (`R-TAP-1`). |
+| R-MOD-2 | Multi-slot modulation: an Audio Modulator instance provides configurable modulation slots (up to 8 slots, revealed progressively or enabled per slot). Each slot configures: (1) `target_filter` (sibling filter on `obs_filter_get_parent`, enumerated via `obs_source_enum_filters`, excluding the modulator itself, held via `obs_weak_source_t *`); (2) `target_setting` (any visible `OBS_PROPERTY_FLOAT`, `OBS_PROPERTY_INT`, or integer `OBS_PROPERTY_LIST` property on the target filter, discovered by walking `obs_source_properties(target_filter)` including nested `OBS_PROPERTY_GROUP`s, as in `obs-move-transition/move-value-filter.c:878-948`); (3) `signal` (`level`, `sub_bass`, `bass`, `mid`, `high`, `kick`, `snare`, `beat`, spectrum band `0..31`, or a custom `[freq_low_hz .. freq_high_hz]` FFT band); (4) `amount` (bipolar modulation depth `-100%..+100%`, i.e. `-1.0..+1.0`); (5) `min_value` and `max_value` (`range`, automatically seeded from the target property's `obs_property_float_min/max` or `obs_property_int_min/max` when a setting is chosen). |
+| R-MOD-3 | Modulation math (`src/core/modulation.c`): for a normalized signal $s \in [0, 1]$, bipolar amount $a \in [-1, 1]$, and range $[v_{\min}, v_{\max}]$: when $a \ge 0$, $v = v_{\min} + (v_{\max} - v_{\min}) \cdot (s \cdot a)$; when $a < 0$ (inverted / ducking mode), $v = v_{\max} - (v_{\max} - v_{\min}) \cdot (s \cdot |a|)$ (or base + offset clamped to $[v_{\min}, v_{\max}]$). Integer properties round to the nearest integer (`llround`) and respect `obs_property_int_step` when applicable. |
+| R-MOD-4 | Target update discipline and change-only gate: in `video_tick`, for each target filter with one or more active slots, the modulator updates the target's `obs_data_t *settings` (`obs_source_get_settings(target)`) and calls `obs_source_update(target, NULL)` at most **once per target filter per frame** (batching multiple slots that target different settings on the same filter into one `obs_source_update` call), and **skips `obs_source_update` entirely** when every slot's new value differs from the last written value by less than epsilon (`1e-4` for floats, `0` for ints). Each slot also supports an optional update-rate divider ("Every frame", "Every 2 frames", "Every 4 frames") for targets with expensive `update` callbacks. |
+| R-MOD-5 | **Baseline capture and restoration lifecycle (`src/core/baseline.c`, tested by `test-modulator-baseline`)**: Because modulating a sibling filter writes directly into that filter's `obs_data_t *settings`, the modulator must track an explicit per-`(target_filter_name, target_setting_name)` baseline state machine: (1) **Capture once before first write**: when a slot becomes active on a target setting that is not currently tracked as modulated, capture its original unmodulated value (`double` or `long long`) before writing the first modulated value; subsequent ticks while active **never** overwrite the captured baseline with a modulated value, unless the user manually edits the target setting outside the modulator (detected when the target's current setting differs from `last_written_value` by more than epsilon); (2) **Restore on disable / retarget / remove / unload**: the modulator immediately writes the captured original value back into the target filter's `obs_data_t *` and calls `obs_source_update(target, NULL)` whenever: (a) the slot is disabled, (b) the slot's `target_filter` or `target_setting` is changed (restoring the previous target before capturing the new one), (c) the Audio Modulator filter itself is disabled (`!obs_source_enabled(self)` via the `"enable"` signal or `video_tick` check), (d) the Audio Modulator filter is removed from its parent (`filter_remove`) or destroyed (`destroy`), or (e) OBS closes / unloads the module (`obs_module_unload`). |
+| R-MOD-6 | **Scene-collection save protection (no saved mid-pulse values, tested by `test-modulator-baseline`)**: If OBS saves the scene collection while audio is pulsing (Ctrl+S, scene collection switch, periodic autosave, or OBS exit), the target filter's `obs_data_t *settings` must not be serialized with a transient mid-pulse value (e.g. NVIDIA Blur stuck at `80`). To prevent this: (1) In the modulator's `save` callback (`obs_source_info.save`) and frontend `OBS_FRONTEND_EVENT_EXIT` / save hook, all active slots immediately write their captured baseline values back into each target filter's `obs_data_t *settings` (and re-apply modulation on the next `video_tick` if OBS remains running); and (2) the modulator persists its `{target_filter, target_setting, baseline_value, was_modulated}` map inside its own private `obs_data_t *settings`, so if OBS ever crashed mid-pulse and reloaded a scene collection where the target setting was saved mid-pulse, the modulator restores the persisted baseline immediately on load (`create`/`update`). |
 
----
+## 7. NVIDIA RTX filter compatibility
 
-## 8. Threading, Determinism, Testing & Working Rules (`R-THR-*`, `R-TST-*`, `R-STD-*`)
+Facts verified on 2026-10-27 against `plugins/nv-filters/nvidia-videofx-filter.c` at OBS Studio tag `33.0.0`:
 
-- **`R-THR-1` (Three-Thread Contract):**
-  - **Audio Thread:** Lock-free SPSC ring buffer push only.
-  - **Video Render Thread (`video_tick` / `video_render`):** Drains ring buffer, computes FFT & envelopes, updates `vsc_fft_tex` (`512x2`) and `vsc_bands_tex` (`32x1`), renders `.effect` shaders, and applies batched `obs_source_update` calls for `vsc_modulator`.
-  - **UI Thread:** Reads atomic/mutex-guarded config and enumerates sources/properties only inside `get_properties` / property callbacks.
-- **`R-TST-1` (Pure-C Headless Test Suite via `ctest`):**
-  - Every phase MUST ship with deterministic unit tests in `tests/` that run without an OBS instance or GPU:
-    - `test_ringbuf`: SPSC ring buffer wrap-around, overflow policy, planar downmix.
-    - `test_analyzer`: Hann window, 2048-point FFT bin accuracy (`60 Hz`, `440 Hz`, `1000 Hz`, `10000 Hz` sine waves), 512-bin dBFS normalization, 32 log bands, **Custom Hz Window (`freq_low_hz..freq_high_hz`)** extraction (`Average`, `Peak Bin`, `Spectral Flux`), kick/snare onset detection, silence decay, NaN/Inf immunity.
-    - `test_mapping`: Envelope follower (`attack_ms`/`release_ms`), shaping curves, range clamping, epsilon gate, rate divider.
-    - `test_effect_parser`: Custom `.effect` uniform parser for `vsc_filter_custom_shader` and headless syntax/uniform verification of all 10 shipped `.effect` files.
-- **`R-STD-1` (Formatting & Hygiene):**
-  - Run `clang-format -i` on all `.c`/`.h` files before every commit.
-  - Every file MUST be UTF-8 **without** BOM, non-zero bytes, with zero occurrences of the banned placeholder word (`d-u-m-m-y`; use `placeholder` or `stub`) and zero profanity.
-  - Do not touch `C:\Users\jeffr\Documents\obs-playlister`.
-  - Maximum one `git push` per commit cycle, followed by `HEAD == origin/main`, 0-byte, and BOM verification.
+| ID | Requirement |
+|----|-------------|
+| R-NV-1 | The Audio Modulator must be able to drive OBS 33's three built-in NVIDIA RTX video filters (`plugins/nv-filters/nvidia-videofx-filter.c:1189-1235`) through standard OBS filter settings (`obs_data_t` + `obs_source_update`), with zero NVIDIA SDK headers, libraries or runtime loading of our own: (1) **NVIDIA Background Removal** (`id = "nv_greenscreen_filter"`): `threshold` (`OBS_PROPERTY_FLOAT` slider `0.0..1.0`, step `0.05`, line 1064), `mode` (`OBS_PROPERTY_LIST` `OBS_COMBO_FORMAT_INT` `0..3`, lines 1058-1062), and `processing_interval` (mask refresh frequency, `OBS_PROPERTY_INT` slider `1..4`, step `1`, line 1065); (2) **NVIDIA Blur Filter** (`id = "nv_blur_filter"`): `intensity` (`OBS_PROPERTY_FLOAT` slider `0.0..1.0`, step `0.05`, line 1055); (3) **NVIDIA Background Blur Filter** (`id = "nv_background_blur_filter"`): `intensity` (`OBS_PROPERTY_FLOAT` slider `0.0..1.0`, step `0.05`, line 1055). |
+| R-NV-2 | Target update cost awareness (`nvidia-videofx-filter.c:125-151`): in `nvvfx_filter_update`, changing `threshold` or `processing_interval` on `nv_greenscreen_filter` only writes a struct field (`filter->threshold`, `filter->processing_interval`) read during `draw_greenscreen_blur` (line 831) and is cheap per frame. By contrast, changing `intensity` on `nv_blur_filter` or `nv_background_blur_filter` calls `NvVFX_SetF32` + `NvVFX_Load(filter->handle_blur)` (lines 145-149), and changing `mode` on `nv_greenscreen_filter` calls `NvVFX_SetU32` + `NvVFX_Load(filter->handle)` (lines 136-142). Phase 3 benchmarks each of these four settings under per-frame modulation on the RTX 5080 and documents their frame-time cost and recommended update divider (`R-MOD-4`). |
+| R-NV-3 | Loading NVIDIA's proprietary Maxine runtime directly (for effects beyond OBS 33's built-in `nv-filters`) is NOT done (`D-3`). |
 
----
+## 8. Upstream behavior inventory (if `exeldro/obs-shaderfilter` is forked per D-2)
 
-## 9. Resolved Operator Decisions (`D-1..D-4`)
+Recorded from `exeldro/obs-shaderfilter` at commit `73fb5c2` (v2.6.1) per the working rule: before removing or replacing any forked upstream behavior, the requirement it served is recorded here first.
 
-| ID | Decision | Resolution |
-|---|---|---|
-| **`D-1`** | **Shader Strategy** | **100% original GPL-2.0-or-later `.effect` shaders** (no Shadertoy copies, no `obs-shaderfilter` `data/examples/`), with `vsc_fft_tex` (`512x2`) + `vsc_bands_tex` (`32x1`) bound to every shader, plus a **Custom FFT Shader** filter that loads user `.effect` files. |
-| **`D-2`** | **Default Audio Input & Modulator** | Default audio input is **Track 1 (Main Mix)** (`obs_get_audio()`). Keep **Audio Modulator** (`vsc_modulator`) for driving sibling filters including OBS's **NVIDIA Blur**, **Background Blur**, and **Background Removal**. |
-| **`D-3`** | **FFT-Reactive Filter Roster** | Ship all **10 FFT-reactive GPU shader filters** (Spectral Aura/Edge Glow, Wave Warp & Glitch, Chromatic Prism & Bloom, Visualizer Overlay, Zoom Pulse, Kaleidoscope, Feedback Trails, Strobe & Flash, Mirror & Split, Custom FFT Shader) + **Audio Modulator** (11 registered filters total). |
-| **`D-4`** | **FFT Engine** | Self-contained, dependency-free radix-2 Cooley-Tukey 2048-point real FFT in `src/vsc-fft.c` (`GPL-2.0-or-later`) with `512`-bin texture output, `32` log bands, and arbitrary `[freq_low_hz .. freq_high_hz]` band integration. |
+| ID | Upstream behavior in `obs-shaderfilter` 2.6.1 | Disposition in Visual Sidechain |
+|----|-----------------------------------------------|---------------------------------|
+| R-UP-1 | Registers two sources (`shaderfilter 3510, 3667`): `shader_filter` (`OBS_SOURCE_TYPE_FILTER`, `OBS_SOURCE_VIDEO \| OBS_SOURCE_SRGB \| OBS_SOURCE_CUSTOM_DRAW`) and `shader_transition` (`OBS_SOURCE_TYPE_TRANSITION`). | Keep `shader_filter` renamed to `visual_sidechain_shader_filter` (`R-ID-4`); omit `shader_transition` (`D-2`). |
+| R-UP-2 | Resolves `gs_image_file_ex_*` on OBS >= 33.0.0 and `gs_image_file4_*` on older OBS via `os_dlopen("obs")` (`shaderfilter 3693-3715`) using hardcoded struct byte sizes (`41336` and `72`, lines 47-55). | Because Visual Sidechain targets OBS 33.0.0+ only (`R-PLAT-1`), call `gs_image_file4` / `gs_image_file` directly from `<graphics/image-file.h>` in OBS 33's `libobs` headers instead of `os_dlsym` magic-size allocations. |
+| R-UP-3 | Wraps user `.shader` code in `effect_template_begin` and `effect_template_end` unless `override_entire_effect` (`.effect`) is checked (`shaderfilter 59-144, 526-558`), and supports `#include "..."` (`309-364`). | Keep; add the Visual Sidechain audio uniforms (`R-SHD-1`) and `audio_spectrum` (`32x1`) + `audio_fft` (`512x2`) textures + samplers (`R-SHD-2`) to `effect_template_begin` so every `.shader` has immediate access to them. Notice: `load_shader_from_file` (`324-340`) currently has no recursion-depth guard on cyclic `#include`s and crashes if `strchr(line, '"')` is NULL; add a depth cap (16) and NULL checks. |
+| R-UP-4 | Parses shader uniform annotations (`label`/`name`, `widget_type`, `group`, `tooltip`, `minimum`, `maximum`, `step`, `option_N`) to generate OBS Properties controls automatically (`shaderfilter 677-735`). | Keep. |
+| R-UP-5 | Built-in time, UV, random, and previous-frame uniforms (`uv_offset`, `uv_scale`, `uv_pixel_interval`, `uv_size`, `elapsed_time*`, `current_time_*`, `local_time`, `loops`, `loop_second`, `rand_f`, `rand_instance_f`, `rand_activation_f`, `previous_image`, `previous_output`, `shaderfilter 608-668`). | Keep (note: `previous_output` directly powers `fft-feedback-trails.shader` in `R-SHD-3`). |
+| R-UP-6 | Audio peak and magnitude uniforms (`audio_peak`, `audio_magnitude`) driven by an `obs_volmeter_t` attached to `audio_source` or the filter parent (`shaderfilter 2560-2609, 2883-2889`). | Replace the `obs_volmeter_t` path with Layer 1 + Layer 2 (`R-TAP-1..6`, `R-ANA-1..10`) while still populating `audio_peak` and `audio_magnitude` alongside `audio_level`, `audio_sub_bass`, `audio_bass`, `audio_mid`, `audio_high`, `audio_kick`, `audio_snare`, `audio_beat`, `audio_spectrum` and `audio_fft` (`R-SHD-1..2`). |
+| R-UP-7 | Bundled `data/examples/` shaders and `data/textures/`. | Do NOT ship `data/examples/` (`R-LIC-6`, mixed CC BY-NC-SA 3.0 and Shadertoy files). Ship our own original `data/shaders/` suite (`R-SHD-3`) and `data/internal/render_output.effect`. |
+
+## 9. Behavior rules (hard)
+
+| ID | Requirement |
+|----|-------------|
+| R-BEH-1 | It either works or it fails. No hidden opt-ins, no feature gates, no silent fallbacks. |
+| R-BEH-2 | A missing GPU feature, shader compile error (`R-SHD-4`), missing audio source (`R-TAP-3/4`), or invalid target filter setting (`R-MOD-2`) shows a clear, visible error in the filter's Properties window and logs a clear line prefixed with `[visual-sidechain]` in the OBS log. |
+| R-BEH-3 | Properties windows are never mutated asynchronously from the audio thread; status text is built when Properties opens or when a Refresh button / modified callback runs on the UI thread. |
+
+## 10. Threading and lifecycle
+
+| ID | Requirement |
+|----|-------------|
+| R-THR-1 | Three threads touch the plugin: (1) the **OBS audio thread** (`obs_add_raw_audio_callback` / `obs_source_add_audio_capture_callback`), (2) the **OBS graphics / video tick thread** (`video_tick`, `video_render`), and (3) the **UI / properties thread** (`create`, `destroy`, `update`, `get_properties`, `save`). |
+| R-THR-2 | Audio thread rules: the audio callback must never allocate heap memory, never log in steady state, never call `obs_source_*` or graphics APIs, and never block on a long lock. It only downmixes the incoming planar float planes and pushes mono samples + timestamp into the pre-allocated ring buffer (`R-ANA-2`). |
+| R-THR-3 | Graphics thread rules: Dual-resolution FFT (`4096` + `2048`), band integration, auto-gain, envelopes, onset detection, beat phase (`R-ANA-4..9`), dynamic `audio_spectrum` (`32x1`) and `audio_fft` (`512x2`) texture uploads (`R-SHD-2`), and Audio Modulator target updates (`R-MOD-4`) run during `video_tick` / `video_render` on the graphics thread. GPU object creation and destruction (`gs_effect_create`, `gs_texture_create`, `gs_texrender_create`, `gs_effect_destroy`, `gs_texture_destroy`, `gs_texrender_destroy`) always occur inside `obs_enter_graphics()` / `obs_leave_graphics()`. |
+| R-THR-4 | Weak references only for sibling/external sources: both the Audio Tap (`R-TAP-3/4`) and the Audio Modulator (`R-MOD-2`) hold external sources and sibling filters exclusively via `obs_weak_source_t *` (`obs_source_get_weak_source` / `obs_weak_source_get_source`), releasing any strong reference immediately after use so Visual Sidechain never causes a source leak or shutdown hang. |
+
+## 11. Testing
+
+| ID | Requirement |
+|----|-------------|
+| R-TST-1 | All analysis, modulation, and baseline-restoration logic (`audio-ring`, `fft`, `spectrum`, `envelope`, `onset`, `analyzer`, `modulation`, `baseline`, and shader `#include`/annotation helpers) lives in `src/core/` as plain C modules using only `libobs` util, and is tested headlessly by standalone CTest executables under `tests/` (`test-audio-ring`, `test-fft`, `test-spectrum`, `test-envelope`, `test-onset`, `test-analyzer`, `test-modulation`, `test-modulator-baseline`, `test-shader-parser`, `check-locale-keys`). Every PLAN step names its tests before any code is written. |
+| R-TST-2 | **Recorded WAV fixtures with known kicks + synthetic signal verification in CTest**: In addition to analytic sine/step signals, `tests/fixtures/` holds real `.wav` audio fixture files (48 kHz mono/stereo PCM WAV read by `tests/wav-reader.h`): (1) `kick-120bpm-4bars.wav` (known four-on-the-floor kick hits at `t = 0.000, 0.500, 1.000, 1.500, ...` s and snare hits on beats 2 and 4 at `t = 0.500, 1.500, ...` s); (2) `subbass-35hz-vs-kick-95hz.wav` (verifies the 4096-point low-band FFT cleanly resolves `35 Hz` sub-bass in `sub_bass` / bands `1..2` from `95 Hz` kick punch in `kick` / bands `5..7`, which a 2048-point FFT smears together); (3) `dynamic-range-40db.wav` and `silence-and-dc.wav` (verifies auto-gain convergence across a 40 dB level jump and strict `0.0` output on silence/noise below `-55` dBFS). `test-modulator-baseline` verifies `R-MOD-5` and `R-MOD-6` (baseline capture once, never overwritten mid-pulse, restored on disable/retarget/remove/save/crash-reload). |
+| R-TST-3 | **Mutation checks (like `obs-playlister` `R-TST-4`)**: Every CTest executable is configured so failed assertions exit non-zero without a Windows modal dialog (`_set_error_mode(_OUT_TO_STDERR)`, `_set_abort_behavior`, `SetErrorMode`). For every step that adds or updates a test, a deliberate code mutation or broken assertion is run once locally before committing (for example: dropping the low-band FFT from 4096 to 2048 so the `35 Hz` vs `60 Hz` separation check fails, skipping baseline restore in `save` so `test-modulator-baseline` fails, or shifting kick timestamps by 100 ms so the WAV kick-timing check fails) to prove the test catches the defect; the mutation check is recorded in the commit message. |
+| R-TST-4 | A CMake script test (`tests/check-locale-keys.cmake`, adapted from `obs-playlister`) verifies that every `obs_module_text("...")` key in `src/` exists in `data/locale/en-US.ini`, plus a negative test that proves a missing key fails. |
+| R-TST-5 | The full CTest suite (`ctest --test-dir build_x64 -C RelWithDebInfo --output-on-failure --no-tests=error`) is run after every code change without being asked, and runs in CI on every push. |
+| R-TST-6 | `TESTING.md` holds the manual and portable-OBS (`C:\Users\jeffr\OBS-Studio-33-Portable`) integration checklist with expected `[visual-sidechain]` log lines, including NVIDIA RTX filter modulation benchmarks (`R-NV-1/2`), baseline restoration on scene save/close (`R-MOD-5/6`), audio-to-picture lag measurement and `sync_offset_ms` verification (`R-ANA-3`), and multi-filter GPU frame-time measurements. |
+
+## 12. Code and repo standards (hard)
+
+| ID | Requirement |
+|----|-------------|
+| R-STD-1 | Plan first: write or update `REQUIREMENTS.md` and `PLAN.md` and wait for operator approval before writing or changing code. Before removing or replacing any forked upstream behavior, record the requirement it served in `REQUIREMENTS.md` first. |
+| R-STD-2 | UTF-8 without BOM in every file. No 0-byte files. Verified before commit and after every push. |
+| R-STD-3 | Meaningful names. Never use the banned placeholder word (`d-u-m-m-y`; use `placeholder`, `stub` or a descriptive name). No profanity anywhere in code, comments, tests, commits or docs. |
+| R-STD-4 | Code formatting: C files formatted with `clang-format` (`C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\Llvm\x64\bin\clang-format.exe`, version 19.1.5 locally; CI checks `clang-format` 17). CMake files formatted to match `.gersemirc` (2-space indent, 120 columns; run `gersemi` 0.21.0 before pushing if installed, as CI fails on any `gersemi` output line). |
+| R-STD-5 | One `git push` attempt maximum. If it fails, stop and give the operator a copy-paste PowerShell block (`cd` first, ASCII quotes). |
+| R-STD-6 | Post-push verification after every push: verify local `HEAD` matches `origin/main`, 0 zero-byte files, 0 BOMs. |
+| R-STD-7 | Every new top-level file or directory is allowlisted in `.gitignore` in the same commit that creates it once `.gitignore` is introduced in Phase 1. |
+
+## 13. Decisions for the operator
+
+| # | Decision | Status / Resolution | Needed before |
+|---|----------|---------------------|---------------|
+| D-1 | Plugin and `buildspec.json` identity: `name` `visual-sidechain`, `displayName` `Visual Sidechain` (no "OBS" in the name, `R-ID-3`), `author` `Jeffrey A. Brick`, `email` `jbrick2070@gmail.com`, `website` `https://github.com/jbrick2070/visual-sidechain`, and canonical local workspace folder **`C:\visual-sidechain`** (`R-ID-2`). | **SETTLED 2026-10-27**: Keep canonical local folder at `C:\visual-sidechain` (created and opened as workspace by the operator) so it is never moved later; default audio input is **Track 1 (the main mix)** (`R-TAP-1`); keep the **Audio Modulator** (`R-MOD-1..6`) for driving sibling filters including OBS's NVIDIA Blur, Background Blur, and Background Removal. | Phase 1 |
+| D-2 | **Fork `exeldro/obs-shaderfilter`, or build our own shader host?** See [PLAN.md](PLAN.md) section 9 for the full comparison. | **Recommend (a): Fork `exeldro/obs-shaderfilter` for the shader filter (excluding `shader_transition` and stripping `data/examples/` per `R-LIC-6`)**, renamed to `visual_sidechain_shader_filter` so it coexists with upstream `obs-shaderfilter`, while keeping Layer 1 (Audio Tap), Layer 2 (`src/core/` Analysis), and Layer 3b (Audio Modulator) in clean separate files, and shipping all 9 original `GPL-2.0-or-later` FFT-reactive shaders (`R-SHD-3`, no Shadertoy copies). | Phase 1 / Phase 4 |
+| D-3 | **NVIDIA's proprietary runtime beyond OBS's built-in filters: yes, later, or never?** | **SETTLED 2026-10-27: Never.** OBS 33's built-in NVIDIA Blur, Background Blur, and Background Removal filters are driven through the generic Audio Modulator (`R-MOD-1..6`, `R-NV-1`). | Phase 3 |
+| D-4 | **If we fork `exeldro/obs-shaderfilter` (`D-2a`), how to bring in Exeldro's history:** add `https://github.com/exeldro/obs-shaderfilter.git` as a read-only git remote (`shaderfilter`) and merge `shaderfilter/master` (`--allow-unrelated-histories`), keeping his 344 commits and all nleseul / Charles Fettinger / Exeldro copyright notices (`R-LIC-2`), and removing the non-GPL `data/examples/` files in the fork-integration commit? | **Recommend: Yes** (add remote `shaderfilter`, merge history on `main`, preserve all notices in `obs-shaderfilter.c`, `resource.rc.in`, and `README.md`, and remove `data/examples/` per `R-LIC-6`). | Phase 4 |
