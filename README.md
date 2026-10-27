@@ -1,15 +1,15 @@
 # Visual Sidechain
 
-**Visual Sidechain** is an audio-reactive video filter suite and parameter modulator for OBS Studio 33 on Windows x64 (NVIDIA RTX first). It taps any OBS audio source (or the main program mix), extracts real-time musical envelopes and beat signals (`level`, `peak`, `bass`, `mid`, `high`, `kick`, `snare`, `beat_phase`, and a 32-band logarithmic spectrum), and drives either built-in GPU shader filters (**Audio-Reactive Glow / Bloom**, **Audio-Reactive Chromatic Aberration**, **Audio-Reactive Zoom / Pulse**, **Audio-Reactive Color / Flash**, **Audio-Reactive Blur / Vignette**, and a **Spectrum / Waveform Overlay**) or the **Audio Modulator** filter, which sidechains any numeric setting on any sibling filter—including OBS 33's built-in NVIDIA RTX Video Effects filters (`Background Removal`, `Blur`, `Background Blur`) and third-party filters—without modifying their code.
+**Visual Sidechain** is an FFT-reactive GPU shader filter suite and sibling-filter Audio Modulator for OBS Studio 33 on Windows x64 (NVIDIA RTX first). By default it taps **Track 1 (Main Mix)** (or any individual OBS audio source / mixer track), runs a real-time 2048-point Hann-windowed FFT, uploads a 512-bin GPU FFT spectrum + waveform texture (`vsc_fft_tex`) and 32-band logarithmic spectrum texture (`vsc_bands_tex`), and drives 10 original GPU shader filters (**FFT Spectral Aura / Edge Glow**, **FFT Wave Warp & Glitch**, **FFT Chromatic Prism & Bloom**, **FFT Visualizer Overlay**, **FFT Zoom Pulse**, **FFT Kaleidoscope**, **FFT Feedback Trails**, **FFT Strobe & Flash**, **FFT Mirror & Split**, and **Custom FFT Shader**) plus the **Audio Modulator** filter for sidechaining sibling filters including OBS 33's built-in **NVIDIA Blur**, **NVIDIA Background Blur**, and **NVIDIA Background Removal**.
 
 > **Disclaimer:** Visual Sidechain is an independent third-party plugin for OBS Studio. It is not made, endorsed, or supported by the OBS Project or NVIDIA Corporation.
 
 ## Development & AI Disclosure
 
-This project is developed with the assistance of AI coding tools under human direction, review, and hardware verification on OBS Studio 33.
+This project is developed with the assistance of AI coding tools under human direction, review, and hardware verification on OBS Studio 33. All shaders are original `GPL-2.0-or-later` implementations with no Shadertoy copies.
 
 ## Documentation
 
-- [REQUIREMENTS.md](REQUIREMENTS.md) — Functional, architectural, threading, licensing, and testing requirements (`R-*`) and open decisions (`D-1..D-4`).
-- [PLAN.md](PLAN.md) — Phased implementation plan, upstream & OBS 33 source findings, test matrix, risk register, and decision table.
+- [REQUIREMENTS.md](REQUIREMENTS.md) — Functional, FFT/DSP, GPU shader, NVIDIA RTX modulator, threading, licensing, and testing requirements (`R-*`) and resolved decisions (`D-1..D-4`).
+- [PLAN.md](PLAN.md) — Phased implementation plan, OBS 33 & upstream audit findings, 3-layer FFT architecture, test matrix, and risk register.
 - [LICENSE](LICENSE) — GNU General Public License v2.0.
