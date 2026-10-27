@@ -1,0 +1,16 @@
+{
+    "display_name": "@PLUGIN_DISPLAY_NAME@",
+    "id": "@CMAKE_PROJECT_NAME@",
+    "name": "@CMAKE_PROJECT_NAME@",
+    "version": "@PLUGIN_VERSION@",
+    "os_arch": "windows-x64",
+    "description": "FFT-reactive GPU shader filters and sibling-filter Audio Modulator for OBS Studio 33.",
+    "long_description": "Visual Sidechain taps Track 1 or any audio source in OBS Studio 33, runs a real-time dual-resolution 4096/2048-point FFT, and drives GPU shader filters and sibling filter settings.",
+    "urls": {
+        "repository": "@PLUGIN_WEBSITE@",
+        "website": "@PLUGIN_WEBSITE@",
+        "support": "@PLUGIN_WEBSITE@/issues"
+    },
+    "has_banner": false,
+    "has_icon": false
+}
