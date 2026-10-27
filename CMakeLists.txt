@@ -51,6 +51,10 @@ target_sources(
     src/core/onset.c
     src/core/analyzer.h
     src/core/analyzer.c
+    src/core/modulation.h
+    src/core/modulation.c
+    src/core/baseline.h
+    src/core/baseline.c
     src/obs/audio-tap.h
     src/obs/audio-tap.c
 )
