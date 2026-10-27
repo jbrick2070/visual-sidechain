@@ -55,10 +55,14 @@ target_sources(
     src/core/modulation.c
     src/core/baseline.h
     src/core/baseline.c
+    src/core/shader-parse.h
+    src/core/shader-parse.c
     src/obs/audio-tap.h
     src/obs/audio-tap.c
     src/obs/modulator-filter.h
     src/obs/modulator-filter.c
+    src/obs/shader-filter.h
+    src/obs/shader-filter.c
 )
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE src)
 
