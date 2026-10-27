@@ -47,6 +47,10 @@ target_sources(
     src/core/spectrum.c
     src/core/envelope.h
     src/core/envelope.c
+    src/core/onset.h
+    src/core/onset.c
+    src/core/analyzer.h
+    src/core/analyzer.c
 )
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE src)
 
