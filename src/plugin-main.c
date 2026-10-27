@@ -72,7 +72,8 @@ static void on_panic_hotkey(void *data, obs_hotkey_id id, obs_hotkey_t *hotkey, 
 		return;
 	vs_fader_bridge_trigger_panic();
 	obs_enum_all_sources(enum_panic_sources_cb, NULL);
-	obs_log(LOG_INFO, "Panic hotkey triggered: zeroed all strobe, flash, and modulation amounts");
+	obs_log(LOG_INFO,
+		"Panic hotkey triggered: shader filters set to pass-through and all strobe, flash, and modulation amounts zeroed");
 }
 
 static void on_restore_hotkey(void *data, obs_hotkey_id id, obs_hotkey_t *hotkey, bool pressed)
@@ -84,7 +85,8 @@ static void on_restore_hotkey(void *data, obs_hotkey_id id, obs_hotkey_t *hotkey
 		return;
 	vs_fader_bridge_trigger_restore();
 	obs_enum_all_sources(enum_restore_sources_cb, NULL);
-	obs_log(LOG_INFO, "Restore hotkey triggered: restored all pre-panic strobe, flash, and modulation amounts");
+	obs_log(LOG_INFO,
+		"Restore hotkey triggered: shader filters restored from pass-through and pre-panic amounts restored");
 }
 
 /* Shown by the OBS 33 Plugin Manager when data/manifest.json gives no display name. Keep both strings in sync
