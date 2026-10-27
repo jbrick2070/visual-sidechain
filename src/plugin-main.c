@@ -22,6 +22,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include "obs/modulator-filter.h"
 #include "obs/shader-filter.h"
+#include "obs/vendor-api.h"
 
 OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
@@ -44,6 +45,11 @@ bool obs_module_load(void)
 	vs_register_shader_filter();
 	obs_log(LOG_INFO, "plugin loaded successfully (version %s)", PLUGIN_VERSION);
 	return true;
+}
+
+void obs_module_post_load(void)
+{
+	vs_vendor_api_register();
 }
 
 void obs_module_unload(void)
