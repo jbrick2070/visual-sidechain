@@ -54,5 +54,6 @@ void obs_module_post_load(void)
 
 void obs_module_unload(void)
 {
+	vs_fader_bridge_detach();
 	obs_log(LOG_INFO, "plugin unloaded");
 }
