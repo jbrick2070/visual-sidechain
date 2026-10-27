@@ -43,6 +43,8 @@ target_sources(
     src/core/audio-ring.c
     src/core/fft.h
     src/core/fft.c
+    src/core/spectrum.h
+    src/core/spectrum.c
 )
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE src)
 
