@@ -65,6 +65,7 @@ target_sources(
     src/obs/modulator-filter.c
     src/obs/shader-filter.h
     src/obs/shader-filter.c
+    src/obs/property-status.h
     src/obs/vendor-api.h
     src/obs/vendor-api.c
 )

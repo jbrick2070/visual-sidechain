@@ -1,6 +1,6 @@
 # Visual Sidechain -- Beta Tester Guide (OBS Studio 33, Windows x64)
 
-Thank you for beta testing **Visual Sidechain**! This single-page guide takes about **10 minutes** in OBS Studio 33 and walks through installing the plugin, setting up the photosensitivity safety hotkeys, testing the 9 built-in FFT-reactive GPU shaders, testing sibling-filter sidechaining with the **Audio Modulator**, and filing your hardware report.
+Thank you for beta testing **Visual Sidechain**! This single-page guide takes about **10 minutes** in OBS Studio 33 and walks through installing the plugin, setting up the photosensitivity safety hotkeys, testing the 11 built-in FFT-reactive GPU shaders, testing sibling-filter sidechaining with the **Audio Modulator**, and filing your hardware report.
 
 - **Project & Docs (`main`):** https://github.com/jbrick2070/visual-sidechain
 - **Latest Release Downloads:** https://github.com/jbrick2070/visual-sidechain/releases/latest
@@ -56,9 +56,12 @@ Close OBS Studio, then choose the package from [GitHub Releases](https://github.
    - `FFT Feedback Trails`
    - `FFT Strobe & Flash`
    - `FFT Mirror & Split` *(try switching the `Mirror Mode` dropdown)*
+   - `FFT Hex Pulse Lattice` *(try cell density and overlay opacity; bass expands the outlines)*
+   - `FFT Polygon Tunnel` *(try three, six, and eight sides, then vary depth and travel speed)*
 4. Press your **`Visual Sidechain: Panic`** hotkey while music is playing:
    - Confirm the video immediately drops back to clean, unmodified pass-through.
    - Press **`Visual Sidechain: Restore`** and confirm the shader resumes at its prior intensity.
+5. Under **Fader Control**, assign a fader to a geometric parameter and check that its summary matches the target and range. Reset that assignment and confirm the parameter returns to its slider value. A second assignment cannot select a target already owned by the first. Test on a source with transparency and confirm the new geometric overlays stay within the visible source.
 
 ---
 
@@ -82,7 +85,9 @@ Close OBS Studio, then choose the package from [GitHub Releases](https://github.
 - **Audio Routing & Ghost Sidechain:** Switch **`Audio Input Source`** to **`Specific Audio Source`**, pick a muted drum/click track, and enable **`React When Source Is Muted (Ghost Sidechain)`** so visuals react to an inaudible trigger track. Also try selecting **`Parent Source Audio`** on a non-audio source (like a Color Source or Image) to confirm the inline warning banner appears cleanly in Properties.
 - **Audio-to-Video Sync Offset (`-200..+500 ms`):** If your audio monitoring path or capture card adds delay, adjust **`Audio-to-Video Sync Offset (ms)`** until beat hits line up visually with what you hear.
 - **NVIDIA RTX 50-Series (Blackwell) Note:** On RTX 50-series GPUs with NVIDIA Video Effects SDK `0.7.6.0`, modulating `threshold` on `NVIDIA Background Removal` updates at full frame rate, whereas modulating `intensity` on `NVIDIA Blur` / `Background Blur` reloads `NvVFX_Load`—set **`Update Rate Divider`** on that slot to **`Every 2 Frames`** or **`Every 4 Frames`**.
-- **Midi Fadester Pairing:** If you also have [Midi Fadester](https://github.com/jbrick2070/midi-fadester) installed in `plugins\midi-fadester\`, open `Audio Modulator -> Driving Signal` and confirm `Fader: Crossfader`, `Fader: 1..8`, and `Fader: Master` appear without `"Midi Fadester is not loaded"` and respond live to hardware MIDI fader moves.
+- **Midi Fadester & Stream Deck Fadester Pairing:** If you also have [Midi Fadester](https://github.com/jbrick2070/midi-fadester) installed in `plugins\midi-fadester\` (optionally paired with **Fadester for OBS** on Stream Deck +):
+  - In **`Visual Sidechain: Shader Filter -> Fader Control (Midi & Stream Deck Fadester)`**, bind any slot (`Crossfader`, `Fader 1..8`, `Master`) to **`Effect Mix Fader (Dry / Wet)`**, **`Audio Reactivity Fader`**, or **`Parameter Fader 1 / 2`** (e.g. `Aura Intensity`, `Prism Dispersion`, or `Spectrum Bar Height`) and move your physical MIDI fader or Stream Deck + dial.
+  - In **`Visual Sidechain: Audio Modulator`**, pick **`Depth Fader (Midi / Stream Deck Fadester)`** on an audio-driven slot to scale `Modulation Amount` live from `0–100%` without losing beat reactivity (or pick `Fader: 1..8` directly as `Driving Audio Signal`).
 - **`obs-websocket` 5 Vendor API:** Query `CallVendorRequest` (`vendorName: "visual-sidechain"`, `requestType: "get_signals"`) or subscribe to `VendorEvent` (`eventType: "signals_changed"`, capped at 30 Hz) from Streamer.bot, TouchDesigner, or an `obs-websocket` script.
 
 ---
