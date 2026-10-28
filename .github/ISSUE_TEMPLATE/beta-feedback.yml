@@ -1,6 +1,6 @@
 name: Beta Tester Report / Bug Feedback
-description: Report your OBS Studio 33 beta test results, UX feedback, or a bug on Visual Sidechain 0.5.1+
-title: "[Beta 0.5.1] "
+description: Report your OBS Studio 33 beta test results, UX feedback, or a bug on Visual Sidechain
+title: "[Beta] "
 labels: ["beta-feedback"]
 body:
   - type: markdown
@@ -26,9 +26,9 @@ body:
     attributes:
       label: Download Package Used
       options:
-        - "visual-sidechain-0.5.1-windows-x64-Installer.exe (Standard Installer)"
-        - "visual-sidechain-0.5.1-windows-x64-Portable.zip (Portable OBS 33)"
-        - "visual-sidechain-0.5.1-windows-x64.zip (Manual ProgramData Zip)"
+        - "*-windows-x64-Installer.exe (Standard Installer)"
+        - "*-windows-x64-Portable.zip (Portable OBS 33)"
+        - "*-windows-x64.zip (Manual ProgramData Zip)"
         - "Built from source"
     validations:
       required: true

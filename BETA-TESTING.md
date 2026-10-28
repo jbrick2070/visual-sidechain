@@ -1,8 +1,9 @@
-# Visual Sidechain 0.5.1 -- Beta Tester Guide (OBS Studio 33, Windows x64)
+# Visual Sidechain -- Beta Tester Guide (OBS Studio 33, Windows x64)
 
-Thank you for beta testing **Visual Sidechain 0.5.1**! This single-page guide takes about **10 minutes** in OBS Studio 33 and walks through installing the plugin, setting up the photosensitivity safety hotkeys, testing the 9 built-in FFT-reactive GPU shaders, testing sibling-filter sidechaining with the **Audio Modulator**, and filing your hardware report.
+Thank you for beta testing **Visual Sidechain**! This single-page guide takes about **10 minutes** in OBS Studio 33 and walks through installing the plugin, setting up the photosensitivity safety hotkeys, testing the 9 built-in FFT-reactive GPU shaders, testing sibling-filter sidechaining with the **Audio Modulator**, and filing your hardware report.
 
-- **Latest Release Downloads:** https://github.com/jbrick2070/visual-sidechain/releases/tag/0.5.1
+- **Project & Docs (`main`):** https://github.com/jbrick2070/visual-sidechain
+- **Latest Release Downloads:** https://github.com/jbrick2070/visual-sidechain/releases/latest
 - **Submit Beta Feedback / Bug Report:** https://github.com/jbrick2070/visual-sidechain/issues/new?template=beta-feedback.yml
 
 ---
@@ -20,13 +21,13 @@ Thank you for beta testing **Visual Sidechain 0.5.1**! This single-page guide ta
 
 ## Step 1 -- Download & Install (2 min)
 
-Close OBS Studio, then choose the package from [Release 0.5.1](https://github.com/jbrick2070/visual-sidechain/releases/tag/0.5.1) that matches how you run OBS 33:
+Close OBS Studio, then choose the package from [GitHub Releases](https://github.com/jbrick2070/visual-sidechain/releases/latest) that matches how you run OBS 33:
 
 | Your OBS 33 Setup | File to Download | Where to Install |
 |---|---|---|
-| **Standard Windows Install** (easiest) | `visual-sidechain-0.5.1-windows-x64-Installer.exe` | Run the installer (installs to `C:\ProgramData\obs-studio\plugins\visual-sidechain\`). |
-| **Standard Windows Install** (manual zip) | `visual-sidechain-0.5.1-windows-x64.zip` | Extract so you have `C:\ProgramData\obs-studio\plugins\visual-sidechain\visual-sidechain.dll` and `data\`. |
-| **Portable OBS Studio 33** | `visual-sidechain-0.5.1-windows-x64-Portable.zip` | Extract directly into your portable OBS 33 root folder so you have `<OBS 33 root>\plugins\visual-sidechain\visual-sidechain.dll`. |
+| **Standard Windows Install** (easiest) | `visual-sidechain-*-windows-x64-Installer.exe` | Run the installer (installs to `C:\ProgramData\obs-studio\plugins\visual-sidechain\`). |
+| **Standard Windows Install** (manual zip) | `visual-sidechain-*-windows-x64.zip` | Extract so you have `C:\ProgramData\obs-studio\plugins\visual-sidechain\visual-sidechain.dll` and `data\`. |
+| **Portable OBS Studio 33** | `visual-sidechain-*-windows-x64-Portable.zip` | Extract directly into your portable OBS 33 root folder so you have `<OBS 33 root>\plugins\visual-sidechain\visual-sidechain.dll`. |
 
 > **Unsigned Binary Note (Windows SmartScreen):** Beta binaries are not Authenticode code-signed yet.
 > - On the `.exe` installer, Windows SmartScreen will show *"Windows protected your PC"*; click **More info -> Run anyway**.
