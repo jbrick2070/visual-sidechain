@@ -1,6 +1,6 @@
 # visual-sidechain -- Requirements
 
-Status: 2026-10-27. Updated for operator review (Phase 0: plan only, no code).
+Status: 2026-10-28 (`0.5.1` shipped; all Phases 1-5 and UI/concurrency hardening complete).
 Decisions for the operator (with answers received on 2026-10-27) are recorded in section 13.
 
 This file is the source of truth for what Visual Sidechain must do. Rule from
@@ -105,7 +105,7 @@ at commit `73fb5c2` (version 2.6.1, 2026-10-24).
 | ID | Requirement |
 |----|-------------|
 | R-VND-1 | **One Owner Per Concept (`obs-websocket` 5 Vendor `"visual-sidechain"`)**: During `obs_module_post_load()`, Visual Sidechain looks up `obs_websocket_api_get_ph` on `obs_get_proc_handler()` and registers vendor `"visual-sidechain"`. Visual Sidechain owns audio signals; Midi Fadester owns fader slots. Neither plugin re-exposes the other's data over its own vendor API (`visual-sidechain` does NOT expose `get_faders` or `set_fader_value`). If `obs-websocket` is not loaded, Visual Sidechain logs a single informational line and continues operating normally. |
-| R-VND-2 | **Vendor Request (`get_signals`) & Coalesced `signals_changed` Vendor Event**: `get_signals` returns `{ success: true, version, api_version: 1, level, sub_bass, bass, mid, high, kick, snare, beat, beat_phase, spectral_centroid, spectral_flux, estimated_bpm, bpm, spectrum: [32 floats] }`, and `signals_changed` emits the same payload over `obs-websocket` coalesced to at most **30 events per second** (`min_interval = 33.33 ms`). |
+| R-VND-2 | **Vendor Request (`get_signals`) & Coalesced `signals_changed` Vendor Event**: `get_signals` returns `{ success: true, version, api_version: 1, level, sub_bass, bass, mid, high, kick, snare, beat, beat_phase, spectral_centroid, spectral_flux, estimated_bpm, bpm, spectrum: [{ band: 0..31, value: float }] }`, and `signals_changed` emits the same payload over `obs-websocket` coalesced to at most **30 events per second** (`min_interval = 33.33 ms`) across all active filter instances (prioritizing Track 1 when multiple taps are active). |
 | R-VND-3 | **In-Process Bridge (`visual_sidechain_get_signals` proc & `visual_sidechain_signals` signal)**: On `obs_get_proc_handler()`, Visual Sidechain registers `void visual_sidechain_get_signals(out float level, out float bass, out float mid, out float high, out float kick, out float snare, out float beat_phase, out float bpm, out bool ok)`. On `obs_get_signal_handler()`, Visual Sidechain registers and emits `void visual_sidechain_signals(float level, float bass, float mid, float high, float kick, float snare, float beat_phase, float bpm, bool ok)` coalesced to at most **30 times per second**. |
 
 ## 7. NVIDIA RTX filter compatibility

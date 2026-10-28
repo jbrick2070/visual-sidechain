@@ -1,6 +1,6 @@
 # visual-sidechain -- Plan
 
-Status: 2026-10-27. Updated for operator review (Phase 0: plan only, no code).
+Status: 2026-10-28 (`0.5.1` shipped; Phases 1-5 implemented and verified on OBS Studio 33.0.0 + RTX 5080).
 Companion to [REQUIREMENTS.md](REQUIREMENTS.md); requirement IDs (`R-...`) and
 decisions (`D-...`) refer to that file.
 
