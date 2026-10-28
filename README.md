@@ -32,8 +32,9 @@ Download the latest release from [GitHub Releases](https://github.com/jbrick2070
 
 This project is written with AI coding tools and reviewed and tested by the author on OBS Studio 33. All bundled shaders are original `GPL-2.0-or-later` implementations with no Shadertoy copies.
 
-## Documentation
+## Documentation & Beta Feedback
 
+- **[BETA-TESTING.md](BETA-TESTING.md)** — **10-minute Beta Tester Guide & Hardware Checklist** for OBS Studio 33 ([Submit a Beta Report](https://github.com/jbrick2070/visual-sidechain/issues/new?template=beta-feedback.yml)).
 - [REQUIREMENTS.md](REQUIREMENTS.md) — Functional, dual-FFT/DSP, GPU shader, NVIDIA RTX modulator, baseline save-protection, threading, licensing, and testing requirements (`R-*`) and decisions (`D-1..D-4`).
 - [PLAN.md](PLAN.md) — Phased implementation plan, OBS 33 & upstream audit findings, 3-layer architecture, per-step named tests and mutation checks, risk register, and verify-at-build checklist.
 - [TESTING.md](TESTING.md) — Headless CTest, mutation-check, and live OBS Studio 33.0.0 hardware verification results.

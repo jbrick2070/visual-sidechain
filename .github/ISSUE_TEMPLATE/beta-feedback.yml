@@ -1,0 +1,78 @@
+name: Beta Tester Report / Bug Feedback
+description: Report your OBS Studio 33 beta test results, UX feedback, or a bug on Visual Sidechain 0.5.1+
+title: "[Beta 0.5.1] "
+labels: ["beta-feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing **Visual Sidechain**! Both **"everything passed on my rig"** hardware reports and bug/UX reports are super valuable. Need the 10-minute walkthrough? See **[BETA-TESTING.md](https://github.com/jbrick2070/visual-sidechain/blob/main/BETA-TESTING.md)**.
+
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: Overall Result
+      options:
+        - "Passed all core checks"
+        - "Passed with minor UX / visual notes"
+        - "Bug / visual glitch / unexpected behavior"
+        - "OBS crash or freeze"
+        - "Install / plugin failed to load"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: package
+    attributes:
+      label: Download Package Used
+      options:
+        - "visual-sidechain-0.5.1-windows-x64-Installer.exe (Standard Installer)"
+        - "visual-sidechain-0.5.1-windows-x64-Portable.zip (Portable OBS 33)"
+        - "visual-sidechain-0.5.1-windows-x64.zip (Manual ProgramData Zip)"
+        - "Built from source"
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Windows, OBS Version & GPU
+      description: "Example: Windows 11 24H2, OBS 33.0.0, NVIDIA RTX 4070 (Driver 572.xx) / AMD RX 7800 XT"
+      placeholder: "Windows 11, OBS 33.0.0, GPU model & driver..."
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: tested_areas
+    attributes:
+      label: What Did You Test?
+      options:
+        - label: "Plugin loaded cleanly in OBS 33 (`[visual-sidechain] plugin loaded successfully`)"
+        - label: "`Visual Sidechain: Shader Filter` — 9 built-in FFT shaders"
+        - label: "`Visual Sidechain: Panic` and `Visual Sidechain: Restore` hotkeys"
+        - label: "`Visual Sidechain: Audio Modulator` — sibling filter modulation"
+        - label: "Baseline safety — original filter values preserved after disable & OBS restart"
+        - label: "Ghost sidechain (`Specific Audio Source` + `React When Source Is Muted`)"
+        - label: "Audio-to-Video Sync Offset (`-200..+500 ms`)"
+        - label: "NVIDIA Broadcast RTX filters (`NVIDIA Blur` / `Background Blur` / `Background Removal`)"
+        - label: "Midi Fadester integration (`Fader: Crossfader` / `Fader 1..8` / `Master`)"
+        - label: "`obs-websocket` 5 vendor API (`visual-sidechain` -> `get_signals` / `signals_changed`)"
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes, UX Feedback, or Steps to Reproduce
+      description: Tell us how frame rate / responsiveness felt, any UI friction, or exact steps if something broke.
+      placeholder: |
+        - Audio source used (Track 1, Media Source, Application Audio Capture, etc.):
+        - Shaders / target filters tested:
+        - What happened / suggestions:
+    validations:
+      required: true
+
+  - type: input
+    id: obs_log
+    attributes:
+      label: OBS Log URL (Recommended for bugs)
+      description: "In OBS: Help -> Log Files -> Upload Current Log File -> Copy URL"
+      placeholder: "https://obsproject.com/logs/..."
