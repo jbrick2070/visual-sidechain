@@ -59,3 +59,14 @@ This project is written with AI coding tools and reviewed and tested by the auth
 - [PLAN.md](PLAN.md) — Phased implementation plan, OBS 33 & upstream audit findings, 3-layer architecture, per-step named tests and mutation checks, risk register, and verify-at-build checklist.
 - [TESTING.md](TESTING.md) — Headless CTest, mutation-check, and live OBS Studio 33.0.0 hardware verification results.
 - [LICENSE](LICENSE) — GNU General Public License v2.0.
+
+## License
+
+Visual Sidechain is licensed under the **GNU General Public License v2.0 or later (GPL-2.0-or-later)**.
+
+This is because Visual Sidechain is an OBS Studio plugin:
+
+- It loads directly into the OBS Studio process and links against **libobs**, which is licensed under GPL-2.0.
+- It is built from the official **OBS Plugin Template**, which is also GPL-2.0.
+
+To stay compatible with OBS Studio, Visual Sidechain uses the same license. You are free to use, study, modify, and share it. If you distribute a modified version, it must stay open source under the GPL. See [LICENSE](LICENSE).
