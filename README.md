@@ -48,6 +48,10 @@ Midi's **Clean / All FX Off** resets enabled `filter_param` bindings in either b
 - **Request:** `CallVendorRequest` with `vendorName: "visual-sidechain"`, `requestType: "get_signals"` returns `{ success, version, api_version: 1, level, sub_bass, bass, mid, high, kick, snare, beat, beat_phase, spectral_centroid, spectral_flux, estimated_bpm, bpm, spectrum: [{ band: 0..31, value }] }`.
 - **Event:** `VendorEvent` (`vendorName: "visual-sidechain"`, `eventType: "signals_changed"`) streams the same payload coalesced to at most 30 events/sec.
 
+## Languages
+
+Visual Sidechain follows the language OBS runs in (Settings > General > Language; OBS needs a restart to change it). Besides English it speaks Simplified Chinese, Spanish, Brazilian Portuguese, Russian, Japanese, German, French, Korean, Traditional Chinese and Turkish. A few strings start from OBS's own translation; the rest was drafted by an AI model (Claude), and every file was reviewed by a second one (Gemini), whose corrections were taken. No native speaker has checked them yet. If something reads wrong in your language, please open an issue or a pull request: the files are in `data/locale/`, one per language, and `en-US.ini` is the English source. Shader parameter names come from the shader files and stay as written there; log lines stay English.
+
 ## Development & AI Disclosure
 
 This project is written with AI coding tools and reviewed and tested by the author on OBS Studio 33. All bundled shaders are original `GPL-2.0-or-later` implementations with no Shadertoy copies.

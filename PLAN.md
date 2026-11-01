@@ -405,3 +405,74 @@ Goal: Expose Visual Sidechain audio/beat signals over the `obs-websocket` 5 vend
 
 ### D-4: How to bring in Exeldro's history if we fork (`D-2a`)
 - **Recommendation**: Add `https://github.com/exeldro/obs-shaderfilter.git` as a remote (`shaderfilter`) in Phase 4 and merge `shaderfilter/master` (`--allow-unrelated-histories`), preserving his 344 commits and all nleseul / Charles Fettinger / Exeldro notices (`R-LIC-2`) while removing `data/examples/` (`R-LIC-6`) in the merge/cleanup commit.
+
+---
+
+## 10. Translations (R-I18N-1..5; requested by the operator 2026-10-31, after obs-playlister 0.5.1's)
+
+Goal: Visual Sidechain follows the language OBS runs in, in the ten languages obs-playlister has. The text is almost all
+in `en-US.ini` already (164 keys); what is left is a handful of hardcoded strings and the nine places that pass a
+translated text to `snprintf` as its format.
+
+1. **Step 10.1 -- Format-safe text and the last hardcoded strings (`src/core/text-format.h`, `src/core/text-format.c`,
+   `src/plugin-main.c`, `src/obs/shader-filter.c`, `src/obs/modulator-filter.c`, `data/locale/en-US.ini`)**:
+   - `bool vs_format_signature_equal(const char *a, const char *b)` (`src/core/text-format.c`): true when both strings
+     hold the same sequence of printf conversions, each written exactly alike. Only the forms the English uses are
+     known (`%s`, `%d`, `%u`, `%f`, `%g`, `%.Nf`, `%.Ng`; `%%` skipped whole); any other `%` makes a string invalid, and
+     an invalid string equals nothing. So flags, widths, `*`, length modifiers, `%n` and positional `%1$s` can never
+     reach printf from a translation, not even one that edits `en-US.ini` too.
+   - `const char *vs_text_format(const char *key, const char *english)` (`src/obs/text.c`): `obs_module_text(key)`
+     when its conversions equal those of `english`, the trusted literal in the code, else `english`. All nine
+     `snprintf(..., obs_module_text(...), ...)` calls (`modulator-filter.c` 946, 963; `shader-filter.c` 1242-1246,
+     1287-1295) use it, and `check-locale-keys` holds every literal equal to `en-US.ini`'s text.
+   - New keys for the strings still hardcoded in `shader-filter.c`: "No shader file path specified." (no conversions,
+     passed through `"%s"`), "Shader file not found: %s", "Shader parse error (%s): %s", "HLSL compiler error (%s): %s"
+     (through `vs_text_format`), "unknown error", a Properties label for "inline shader" (the compiler and the log keep
+     the English one), and the file dialogs' filter names "Shader Files", "All Files" and "Images" (the patterns stay
+     in the code, and `( ) ; *` in a translated name become spaces, so no name can break Qt's filter).
+     `obs_module_name()`/`obs_module_description()` stay English (the Plugin Manager's names, kept in sync with
+     buildspec.json).
+   - **Tests (`test-text-format`)**: equal and different signatures, every refused form against itself, `%%` next to
+     a broken conversion, `%n` and positional forms, NULL; `vs_text_format` with a stub `obs_module_text`: a good
+     translation used, a swapped one, a stray `%`, a `%n` and a missing key all fall back to the English.
+     `check-locale-keys` fails on a changed English literal (`check-locale-keys-fails-on-changed-english`).
+   - **Mutation check**: make `vs_format_signature_equal` accept any `%` conversion letter, or make `vs_text_format`
+     return the translation unconditionally; `test-text-format` must fail.
+   - **Review round 1 (2026-10-31, Codex GPT-6.1 Sol ultra and Gemini 4 Argon High via agy): taken.** (a) An English
+     lookup loaded from `en-US.ini` is no trusted reference, as that file can be edited too; so, as in obs-playlister's
+     `pl_text`, the caller passes the trusted English literal: `vs_text_format(key, english)` in `src/obs/text.c`
+     returns the translation only when its conversions equal the literal's, else the literal. No lookup to load or free,
+     no lifetime or thread issue (only OBS's immutable lookup is read), and a missing key (OBS gives back the key, which
+     has no conversions) falls back too. No log line, so no shared state. (b) `check-locale-keys` now also fails when a
+     `vs_text_format` key is missing or its literal is not `en-US.ini`'s text (negative test
+     `check-locale-keys-fails-on-changed-english`); the two status arrays at `shader-filter.c` 1232 were spelled out as
+     explicit calls so the check sees them. (c) The format keys are named by the code (every `vs_text_format` key),
+     not guessed from a `%`: tooltips such as "-100% to +100%" are plain text. Conversion order and count are kept (no
+     sorting), and any other `%` in a format text fails. (d) "unknown error" (compiler without a message) is
+     translated; "inline shader" stays English for the compiler and the log, with a separate translated label in
+     Properties. (e) A missing required language has its own negative test. (f) English has 164 keys before this
+     step, 173 after. (g) Gemini: the accepted conversions narrowed to the forms the English uses, as above, in the C
+     code and the CMake check alike (it had accepted `%n`, `'` and `*`, which MSVC's printf can crash on, safe only
+     because they had to equal the English); the CMake check replaced `%%` with nothing, so `%.0%%f` read as `%.0f`,
+     and now uses a marker; a stray `%` in an English format text fails; `vs_text_format`'s fallback has its own tests.
+     Not taken: "Spectrum Band 3" and "Modulation Slot 3" keep their "prefix, number" order (it reads correctly in all
+     ten languages as drafted); the read_locale escape order is right as is (it pairs backslashes left to right, as
+     OBS does).
+2. **Step 10.2 -- The language-file check (`tests/check-locale-files.cmake`, `tests/check-locale-files-bad.cmake`,
+   `tests/fixtures/locale-good/`, `tests/fixtures/locale-bad/`)**: ported from obs-playlister (OBS's parse rules: `#`
+   comments, `key="text"`, `\"` inside the text) with its `%1..%9` placeholder comparison replaced by the printf
+   conversion sequence of R-I18N-2. `REQUIRED_LOCALES` lists the ten files. Negative tests, one per failure:
+   missing key, extra key, repeated key, conversion lost, conversions swapped, a stray `%` (in a translation and in the
+   English), unescaped quote, BOM,
+   invalid UTF-8, bad file name, a required language missing.
+3. **Step 10.3 -- The ten files**: strings whose English is word for word OBS's own take OBS 33.0.0's official
+   translations (`.deps` locale files); Claude drafts the rest from `en-US.ini`; Gemini 4 Argon (agy, read-only)
+   reviews each file against the English and its corrections are applied unless one breaks a rule above (recorded).
+   README gets a Languages section. `check-locale-files` must pass on all ten.
+4. **Step 10.4 -- Checks**: Sonnet 5.5 post-code QA before the build; ctest; the existing portable-OBS self-tests
+   still pass in English; one run of portable OBS 33 in German (user.ini `[General] Language=de-DE`, restored after)
+   that opens a Shader Filter and an Audio Modulator and checks their Properties text is German (TESTING.md row
+   T.1; by script if the existing self-test runner allows it cheaply, else by screenshot). One commit, one push. The
+   version (0.6.0) changes only on the operator's word.
+
+Not in this plan: translating log lines, the vendor API, shader parameter labels, or README.

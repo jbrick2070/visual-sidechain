@@ -59,6 +59,8 @@ target_sources(
     src/core/baseline.c
     src/core/shader-parse.h
     src/core/shader-parse.c
+    src/core/text-format.h
+    src/core/text-format.c
     src/obs/audio-tap.h
     src/obs/audio-tap.c
     src/obs/modulator-filter.h
@@ -66,6 +68,8 @@ target_sources(
     src/obs/shader-filter.h
     src/obs/shader-filter.c
     src/obs/property-status.h
+    src/obs/text.h
+    src/obs/text.c
     src/obs/vendor-api.h
     src/obs/vendor-api.c
 )
