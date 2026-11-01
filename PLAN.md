@@ -461,7 +461,7 @@ translated text to `snprintf` as its format.
 2. **Step 10.2 -- The language-file check (`tests/check-locale-files.cmake`, `tests/check-locale-files-bad.cmake`,
    `tests/fixtures/locale-good/`, `tests/fixtures/locale-bad/`)**: ported from obs-playlister (OBS's parse rules: `#`
    comments, `key="text"`, `\"` inside the text) with its `%1..%9` placeholder comparison replaced by the printf
-   conversion sequence of R-I18N-2. `REQUIRED_LOCALES` lists the ten files. Negative tests, one per failure:
+   conversion sequence of R-I18N-2. `REQUIRED_LOCALES` lists the ten files (eleven since step 10.5 added `nl-NL`). Negative tests, one per failure:
    missing key, extra key, repeated key, conversion lost, conversions swapped, a stray `%` (in a translation and in the
    English), unescaped quote, BOM,
    invalid UTF-8, bad file name, a required language missing.
@@ -550,3 +550,6 @@ from the settings, where the first Panic had written zeros, and saved those zero
 Seen, not fixed here: a value the carry drops stays at the zero Panic wrote into its setting. That happens when the
 new shader has no parameter of that name, so switching to such a shader and back during Panic loses it, and when a
 compile fails during Panic (inline text recompiles on each edit), which leaves no slots to carry from.
+
+Also open: on OBS 33.0.1 the language check (TESTING.md T.3) sometimes stops before its first line and OBS does
+not close (6 of 20 runs on 2026-11-01, German too, so no translation causes it). Not yet investigated.
