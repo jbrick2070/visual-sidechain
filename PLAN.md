@@ -506,6 +506,38 @@ the stale values again. The Audio Modulator's Restore was already right (it writ
    2026-11-01: reporting every slot in the mask and the count fails at `test-fader-bridge.c:509`; the mask alone
    fails the new test at `test-fader-bridge.c:572`.
 
-Seen, not fixed here: a recompile during Panic (Reload, or a preset change) clears the slots, so the values Panic
-saved are lost and the next Restore puts back the zeros Panic wrote into the settings (unless OBS saved the scene
-collection in between, which writes the saved values back into them).
+Seen here, fixed by the follow-up below apart from the cases it lists: a recompile during Panic (Reload, or a preset
+change) cleared the slots, so the values Panic saved were lost and the next Restore put back the zeros Panic wrote
+into the settings (unless OBS saved the scene collection in between, which writes the saved values back into them).
+
+### Follow-up: a shader switch during Panic keeps the saved values (2026-11-01)
+
+A recompile (a new preset, a reloaded or edited custom shader) resets the panic slots with the rest of the old
+shader, and when it compiles during Panic it runs Panic again on the new shader's slots. That Panic read each value
+from the settings, where the first Panic had written zeros, and saved those zeros as the pre-panic values.
+
+1. **The fix (`src/core/fader-bridge.h`, `src/core/fader-bridge.c`, `src/obs/shader-filter.c`)**:
+   - `vs_fader_bridge_carry_saved_slots(old_slots, old_count, new_slots, new_count, new_accepts)` (pure C, beside the
+     other slot helpers): each new slot whose name matches an old slot Panic saved (`saved_valid`) takes that saved
+     value and `saved_valid`. A saved old slot with no same-named new slot is dropped; a new slot with no saved old
+     one is left as it is; `new_accepts` (optional, `new_count` entries) limits which new slots may take a value. It
+     returns how many new slots took one.
+   - `compile_shader` keeps a copy of the panic slots before the reset, with `saved_valid` kept only on float
+     parameters (the only ones Panic, Restore and the settings writer write). When it compiles during Panic it
+     carries them into the new shader's float parameters of the same name, then runs Panic as before. Panic saves a
+     value only once, so a carried value stays, and a parameter new to this shader with a strobe/flash name has its
+     slot zeroed and saved with its own value (its default unless the settings hold one). A compile outside Panic
+     carries nothing.
+   - Restore, Panic, the settings writer (`shader_filter_save`) and the Audio Modulator are unchanged.
+2. **Tests (`test-fader-bridge`)**: Panic, then a recompile as `compile_shader` runs it (a new slot array with two
+   same-named parameters, one gone, one new, its values read from the settings Panic zeroed), then Restore: the
+   same-named parameters get their pre-panic values back, the gone one is not restored, and the new one gets its
+   own pre-panic value; a recompile with nothing saved (no Panic, or after Restore) carries nothing; a same-named
+   parameter that is no longer a float takes nothing; old slots past `old_count` are never read. The call in
+   `compile_shader` and its float filter need libobs graphics and are not unit-tested.
+3. **Mutation check**: make the carry match no name; `test-fader-bridge` must fail. Run 2026-11-01: it fails the new
+   test at `test-fader-bridge.c:676` (TESTING.md row R.4).
+
+Seen, not fixed here: a value the carry drops stays at the zero Panic wrote into its setting. That happens when the
+new shader has no parameter of that name, so switching to such a shader and back during Panic loses it, and when a
+compile fails during Panic (inline text recompiles on each edit), which leaves no slots to carry from.
