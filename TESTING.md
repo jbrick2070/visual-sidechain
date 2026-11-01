@@ -133,3 +133,13 @@ The independent Terra review found two further integration defects. Per-slot gen
 |-------|----------|--------|
 | T.1 | Portable OBS 33 in German (user.ini `[General] Language=de-DE`): add a Shader Filter and an Audio Modulator, open both Properties, pick a missing custom shader file | labels, list items, status lines and the shader error line are German; the file dialog's filter reads "Shader-Dateien (*.shader *.effect *.hlsl)" | Pass (2026-11-01, 6 of 6: preset label, file dialog filter, error label and line, slot group) |
 | T.2 | The same in Japanese | Japanese text, nothing cut off | Pass (2026-11-01, 6 of 6) |
+
+## Fix: Restore without Panic (2026-11-01, PLAN section 11)
+
+The Shader Filter's Restore now writes back only the parameters Panic zeroed and saved; Panic writes only those same slots. `ctest` 29/29 in RelWithDebInfo.
+
+| Check | Evidence | Result |
+|-------|----------|--------|
+| R.1 | `test-fader-bridge` (`test_restore_writes_back_only_what_panic_saved`): a Restore with no Panic restores nothing and changes no slot or value; Panic then Restore restores exactly `flash_intensity` and `slot_1_amount_pct` and keeps `warp_speed` and `max_flash_rate_hz` as changed during Panic; a second Restore restores nothing, even after a restored value was changed | Pass |
+| R.2 | Mutation checks in `src/core/fader-bridge.c`: the restore reports every slot as restored (mask and count) fails at `tests/test-fader-bridge.c:509`; the mask alone reports every slot fails the new test at `tests/test-fader-bridge.c:572` (`exit code 8`) | Pass (both caught) |
+| R.3 | `tests/obs-shader-screenshot-selftest.ps1` in portable OBS 33.0.1 with this build's DLL (old DLL kept as `visual-sidechain.dll.bak-20261101-pre-restore-fix`): `check_a=PASS` (`max_err=0.0000`), `check_b=PASS` (`err=0.0029`); log `2026-11-01 01-52-03.txt` ends `Number of memory leaks: 0`. It does not press Panic or Restore | Pass |

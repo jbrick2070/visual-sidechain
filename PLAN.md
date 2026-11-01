@@ -476,3 +476,36 @@ translated text to `snprintf` as its format.
    version (0.6.0) changes only on the operator's word.
 
 Not in this plan: translating log lines, the vendor API, shader parameter labels, or README.
+
+---
+
+## 11. Fix: Restore without Panic (found by a review of the VJ rig plan on 2026-11-01)
+
+The bug, as shipped: the Shader Filter's Restore (`vs_shader_filter_apply_restore`) restored only the slots Panic had
+saved, then wrote every float parameter back from its panic slot's `current_value`. That value is zero after every
+compile (the filter reset clears the slots) unless a Panic captured it. So a Restore with no Panic before it (the
+hotkey has no panic check) set every float parameter to 0 and saved that into the scene collection; a Panic, a change
+to a non-strobe parameter, then Restore put that parameter back to its Panic-time value; and a second Restore wrote
+the stale values again. The Audio Modulator's Restore was already right (it writes only slots with
+`has_saved_pre_panic`) and is left as it is.
+
+1. **The fix (`src/core/fader-bridge.h`, `src/core/fader-bridge.c`, `src/obs/shader-filter.c`)**:
+   - `vs_fader_bridge_apply_restore_to_slots` and `vs_fader_bridge_apply_restore_to_shader` take an optional
+     `bool *out_restored` (`count` entries, true for exactly the slots restored) and return how many were restored.
+   - The Shader Filter's Restore clears its own pass-through and writes back only those slots (float parameters,
+     into `user_bindings` and the settings). A Restore with nothing saved changes no parameter.
+   - Panic, to match, writes back only the slots it zeroed and saved (`saved_valid`): the same set the settings
+     writer (`shader_filter_save`) keeps at their saved values and Restore writes back. Before, it also re-wrote every
+     other float parameter with its own value. The 3 Hz flash-cap rule is unchanged: names with `rate`, `threshold`
+     or `_hz` are never zeroed.
+2. **Tests (`test-fader-bridge`)**: a Restore with no Panic restores nothing, leaves every slot and every value
+   unchanged and clears pass-through; Panic then Restore restores exactly the zeroed strobe/flash/amount slots to
+   their saved values and keeps a non-strobe value and the flash rate cap changed during Panic; a second Restore
+   restores nothing, even after a restored value was changed.
+3. **Mutation check**: make the restore report every slot as restored; `test-fader-bridge` must fail. Run
+   2026-11-01: reporting every slot in the mask and the count fails at `test-fader-bridge.c:509`; the mask alone
+   fails the new test at `test-fader-bridge.c:572`.
+
+Seen, not fixed here: a recompile during Panic (Reload, or a preset change) clears the slots, so the values Panic
+saved are lost and the next Restore puts back the zeros Panic wrote into the settings (unless OBS saved the scene
+collection in between, which writes the saved values back into them).
