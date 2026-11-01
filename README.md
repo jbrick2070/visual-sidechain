@@ -50,7 +50,7 @@ Midi's **Clean / All FX Off** resets enabled `filter_param` bindings in either b
 
 ## Languages
 
-Visual Sidechain follows the language OBS runs in (Settings > General > Language; OBS needs a restart to change it). Besides English it speaks Simplified Chinese, Spanish, Brazilian Portuguese, Russian, Japanese, German, French, Korean, Traditional Chinese and Turkish. A few strings start from OBS's own translation; the rest was drafted by an AI model (Claude), and every file was reviewed by a second one (Gemini), whose corrections were taken. No native speaker has checked them yet. If something reads wrong in your language, please open an issue or a pull request: the files are in `data/locale/`, one per language, and `en-US.ini` is the English source. Shader parameter names come from the shader files and stay as written there; log lines stay English.
+Visual Sidechain follows the language OBS runs in (Settings > General > Language; OBS needs a restart to change it). Besides English it speaks Simplified Chinese, Spanish, Brazilian Portuguese, Russian, Japanese, German, French, Korean, Traditional Chinese, Turkish and Dutch. A few strings start from OBS's own translation; the rest was drafted by an AI model (Claude), and every file was reviewed by a second one (Gemini), whose corrections were taken. No native speaker has checked them yet. If something reads wrong in your language, please open an issue or a pull request: the files are in `data/locale/`, one per language, and `en-US.ini` is the English source. Shader parameter names come from the shader files and stay as written there; log lines stay English.
 
 ## Development & AI Disclosure
 

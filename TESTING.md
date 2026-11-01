@@ -125,7 +125,7 @@ The independent Terra review found two further integration defects. Per-slot gen
 
 ## Translations (uncommitted, after 0.6.0)
 
-`ctest` checks every language file against `en-US.ini` (`check-locale-files`: the same keys; in each of the 15 texts the code passes to `printf` through `vs_text_format`, the same conversions in the same order; valid UTF-8 without a BOM; no stray quote; all ten languages present), and `check-locale-keys` holds each `vs_text_format` English literal equal to `en-US.ini`. At run time a translation whose conversions differ from the code's English is never used as a format (`test-text-format`).
+`ctest` checks every language file against `en-US.ini` (`check-locale-files`: the same keys; in each of the 15 texts the code passes to `printf` through `vs_text_format`, the same conversions in the same order; valid UTF-8 without a BOM; no stray quote; all eleven languages present, Dutch included since 2026-11-01), and `check-locale-keys` holds each `vs_text_format` English literal equal to `en-US.ini`. At run time a translation whose conversions differ from the code's English is never used as a format (`test-text-format`).
 
 `tests/obs-locale-check.lua` automates T.1 and T.2 (a Shader Filter with a missing custom file and an Audio Modulator on a color source: the preset label, the file dialog filter, the shader error line through `vs_text_format`, a slot group title). Run it with obs-playlister's runner, which sets OBS's language for one run and restores user.ini, after setting `$env:VS_LOCALE_FILE = 'C:/visual-sidechain/data/locale/de-DE.ini'`: `run-harness.ps1 -ObsRoot <portable OBS> -Files <three videos> -Script ..\..\..\..\..\..\visual-sidechain\tests\obs-locale-check.lua -Language de-DE`. Run on 2026-11-01 in portable OBS 33.0.0 with this build and Midi Fadester's translated build loaded; OBS exited cleanly both times.
 
@@ -133,6 +133,9 @@ The independent Terra review found two further integration defects. Per-slot gen
 |-------|----------|--------|
 | T.1 | Portable OBS 33 in German (user.ini `[General] Language=de-DE`): add a Shader Filter and an Audio Modulator, open both Properties, pick a missing custom shader file | labels, list items, status lines and the shader error line are German; the file dialog's filter reads "Shader-Dateien (*.shader *.effect *.hlsl)" | Pass (2026-11-01, 6 of 6: preset label, file dialog filter, error label and line, slot group) |
 | T.2 | The same in Japanese | Japanese text, nothing cut off | Pass (2026-11-01, 6 of 6) |
+| T.3 | The same in Dutch (`VS_LOCALE_FILE` = `nl-NL.ini`, `-Language nl-NL`; added 2026-11-01) | Dutch text, nothing cut off; the file dialog's filter reads "Shaderbestanden (*.shader *.effect *.hlsl)" | Pass (2026-11-01, portable OBS 33.0.1, 6 of 6 in three runs: "Shaderpreset / modus", "Shaderbestanden (*.shader *.effect *.hlsl);;Alle bestanden (*.*)", "Shadercompilerfout", "Shaderbestand niet gevonden: ...", "Modulatieslot 1"; `nl-NL.ini` added to the installed build, whose DLL equals `build_x64`) |
+
+On OBS 33.0.1 the check sometimes stops before its first line, in German as well as Dutch: the log ends at "User added source 'vs-locale-color'", OBS does not close within 30 s and the runner ends it (6 of 20 runs on 2026-11-01, one of them `de-DE`; with the Dutch file every key subset hung at some point and none did every time, so no text causes it). Not yet investigated; rerun when it happens.
 
 ## Fix: Restore without Panic (2026-11-01, PLAN section 11)
 

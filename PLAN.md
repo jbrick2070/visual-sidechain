@@ -474,6 +474,15 @@ translated text to `snprintf` as its format.
    that opens a Shader Filter and an Audio Modulator and checks their Properties text is German (TESTING.md row
    T.1; by script if the existing self-test runner allows it cheaply, else by screenshot). One commit, one push. The
    version (0.6.0) changes only on the operator's word.
+5. **Step 10.5 -- Dutch (nl-NL; added by the operator 2026-11-01, before demo reel v2, so the reel can show it)**: the
+   eleventh language, made as in step 10.3: OBS 33.0.0's official Dutch where the English is word for word OBS's own
+   ("Spoor 2".."Spoor 6", "(Geen)", "Alle bestanden"), Claude's draft for the rest, keeping the loanwords Dutch VJs and
+   streamers use (fader, preset, slot, sidechain, ducking, dry / wet, kick, snare, onset, glitch, bloom); Gemini 4
+   Argon reviews it against `en-US.ini`. `REQUIRED_LOCALES`, R-I18N-3, README and TESTING list it. `check-locale-files`
+   must pass with nl-NL required and fail when a key is taken out of nl-NL.ini. One in-OBS run in Dutch (TESTING T.3).
+   Review (2026-11-01, Gemini 4 Argon High via agy): 12 of 13 corrections taken (among them "zachte" for quiet drums,
+   "tonvervorming" for barrel lens, "feedback-trails" so it does not read as audio tracks, no "droge bron" for the dry
+   source). Not taken: "Alle Bestanden"; OBS 33 spells it both ways, and "Alle bestanden" is the correct Dutch.
 
 Not in this plan: translating log lines, the vendor API, shader parameter labels, or README.
 
