@@ -21,6 +21,10 @@
 !TESTING.md
 !BETA-TESTING.md
 !/tests
+# README images only; the rest of docs/ stays local
+!/docs
+/docs/*
+!/docs/images
 
 # Exclude lock files
 *.lock.json
