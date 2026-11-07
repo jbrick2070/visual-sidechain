@@ -100,7 +100,7 @@ const char *obs_module_name(void)
 
 const char *obs_module_description(void)
 {
-	return "FFT-reactive GPU shader filters, a sibling-filter Audio Modulator, and Tubester tape decks for OBS Studio 33.";
+	return "FFT-reactive GPU shader filters, a sibling-filter Audio Modulator, and a Tape Deck for OBS Studio 33.";
 }
 
 bool obs_module_load(void)
