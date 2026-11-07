@@ -72,6 +72,14 @@ target_sources(
     src/obs/text.c
     src/obs/vendor-api.h
     src/obs/vendor-api.c
+    src/tubester/tape-url.h
+    src/tubester/tape-url.c
+    src/tubester/speed.h
+    src/tubester/speed.c
+    src/tubester/deck-link.h
+    src/tubester/deck-link.c
+    src/tubester/command.h
+    src/tubester/command.c
 )
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE src)
 

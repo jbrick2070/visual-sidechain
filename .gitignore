@@ -21,10 +21,11 @@
 !TESTING.md
 !BETA-TESTING.md
 !/tests
-# README images only; the rest of docs/ stays local
+# README images and the Tubester documents only; the rest of docs/ stays local
 !/docs
 /docs/*
 !/docs/images
+!/docs/tubester
 
 # Exclude lock files
 *.lock.json
