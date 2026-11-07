@@ -228,3 +228,18 @@ Fable and Gemini answered separately and agreed on the main order.
 Both reviewers say to drop the OBS fork and the YouTube tape type, and Gemini also drops the portable bundle. Those stay open as the operator's decisions. Reverse and a wrapper source wait.
 
 **Operator's decision, 2026-11-07: stay on Tubester rather than finish TourBox 0.2.0 first.** So the design phase closed without a real Knob. Item 3 comes next, once REQUIREMENTS.md is approved, and the real Knob test moves to TourBox 0.2.0 (D-2 in REQUIREMENTS.md).
+
+## 12. Integration phase (standing approval, 2026-11-07 evening)
+
+The operator, leaving, asked to integrate Tubester into the main products as far as possible, Tubester becoming the code name, and approved the decisions in advance. This phase covers section 7 steps 3 to 5 inside that goal. Decisions D-8 to D-15 and the rows marked (I) in REQUIREMENTS.md record what was decided and why. Every step gets a Sonnet 5.5 QA of its diff, the full CTest suite and an OBS run in the test copy before its local commit. Nothing is pushed.
+
+**What the products already offer.** Visual Sidechain's fader bridge receives Midi Fadester's 18 slots in-process (the `midi_fadester_fader_changed` signal, a `midi_fadester_get_slot_value` poll), and Stream Deck and OpenDeck dials reach those slots through Fadester. Fadester for OBS's OBS Filter action writes any numeric filter setting over obs-websocket. So a deck joins the family by reading the bridge and by keeping its settings writable, with no change to the Fadester repositories.
+
+**Steps.**
+- I1. Naming: "Visual Sidechain: Tape Deck" and Visual Sidechain's words in strings, the plugin description and log lines, in all twelve languages. Ids, keys and the event name stay (D-8).
+- I2 (section 7 step 3). Honest states: the page also reports the tape's length; the status snapshot shows speed and position, with a Refresh Status button, and the automatic Properties refresh goes (D-12); the deck resends a speed or play state the page did not take and a tape or eject command it never acknowledged (R-DCK-10); `get_decks` on the vendor API (R-INT-4).
+- I3 (step 4). Speed: every speed change goes through the 50 ms coalescer; a Speed Fader binding to any Fadester slot, mapped on a ratio scale between two speeds (R-SPD-5); hotkeys Speed Up, Speed Down and Normal Speed on the Browser source (D-10).
+- I4 (step 5). Transport: the `playing` setting and checkbox, Cue to Start (hotkey and button), Play / Pause hotkey, play after the end from the start position, a reload keeping a paused deck paused (R-CTL-4); a two-deck independence run; README and TESTING sections for the Tape Deck, including the Fadester dial recipe (R-INT-5).
+- I5. A review of the whole phase (Codex, agy, Sonnet), fixes, and an OBS run with Midi Fadester loaded to prove the fader path end to end.
+
+**Not in this phase (D-13).** The TourBox Knob route, live speed for Playlister, and a Fadester range-table entry. Each waits for a reason recorded in D-13.
