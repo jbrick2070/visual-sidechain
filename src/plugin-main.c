@@ -24,6 +24,8 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include "obs/modulator-filter.h"
 #include "obs/shader-filter.h"
 #include "obs/vendor-api.h"
+#include "tubester/deck-filter.h"
+#include "tubester/listener.h"
 
 OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
@@ -98,13 +100,14 @@ const char *obs_module_name(void)
 
 const char *obs_module_description(void)
 {
-	return "FFT-reactive GPU shader filters and sibling-filter Audio Modulator for OBS Studio 33.";
+	return "FFT-reactive GPU shader filters, a sibling-filter Audio Modulator, and Tubester tape decks for OBS Studio 33.";
 }
 
 bool obs_module_load(void)
 {
 	vs_register_modulator_filter();
 	vs_register_shader_filter();
+	tub_register_deck_filter();
 	g_panic_hotkey_id = obs_hotkey_register_frontend("visual_sidechain_panic", obs_module_text("Hotkey.Panic"),
 							 on_panic_hotkey, NULL);
 	g_restore_hotkey_id = obs_hotkey_register_frontend("visual_sidechain_restore",
@@ -129,5 +132,9 @@ void obs_module_unload(void)
 		g_restore_hotkey_id = OBS_INVALID_HOTKEY_ID;
 	}
 	vs_fader_bridge_detach();
+	/* Closes the report socket and joins its thread. Decks are usually gone by now (the frontend clears its scenes
+	 * first), but libobs unloads modules before it destroys any source still alive, so a deck may be destroyed
+	 * after this; it then unregisters under the listener's lock, which is never destroyed, and finds nothing. */
+	tub_listener_stop();
 	obs_log(LOG_INFO, "plugin unloaded");
 }

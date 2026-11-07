@@ -1,6 +1,7 @@
 # Tubester plan: tape decks for public domain video
 
-Status: PROPOSED, version 2, 2026-11-07. Design tests finished, REQUIREMENTS.md awaits approval. Nothing is built. Version 1 planned YouTube decks for private use. The operator
+Status: version 2, 2026-11-07. Design tests finished and REQUIREMENTS.md approved the same day. Coding phase (section 7)
+under way: step 1, the core, is done; step 2, the Deck filter and its page, is in review. Version 1 planned YouTube decks for private use. The operator
 then chose gigs and streams, using public domain and Internet Archive videos, so this version replaces it. The first
 reviews are in `reviews/`.
 
@@ -118,9 +119,12 @@ with `tests/test-tubester-*.c`, using that plugin's build, CI, formatters and lo
   `start_seconds`. One filter per source, attached only when the parent is a `browser_source`.
 - Parent ownership: hold an `obs_weak_source_t` from `filter_add` to `filter_remove` and promote it per call. Never
   keep a strong reference or call `obs_filter_get_parent` outside its allowed callbacks.
-- Parent setup, once, outside any filter lock: page address, `reroute_audio` on, `shutdown` off, `restart_when_active`
-  off. Never call `obs_source_update(parent, NULL)`, because that reloads the page. Tape changes go through
-  `javascript_event`, not the parent's settings.
+- Parent setup: page address (`is_local_file` off), `reroute_audio` on, `shutdown` off, `restart_when_active` off.
+  Checked when the deck claims its source and after each update signal from the source, never on a timer, on the UI
+  thread where the source's Properties dialog writes the same settings, and changed only where they differ. After a
+  change nothing goes to the page until the source has applied it. Never call `obs_source_update(parent, NULL)`,
+  because that reloads the page. Tape changes go through `javascript_event`, not the parent's settings. One deck drives
+  a source; a second one waits and takes over when the first is removed.
 - Events: one constant event name, and JSON from the C writer. Event names are spliced unescaped into page code, and bad
   JSON can break the event or the page process, so a Windows path is escaped before it is sent.
 - Control: `SetSourceFilterSettings` over obs-websocket and hotkeys, through one serialized setter on a worker thread.
@@ -128,16 +132,20 @@ with `tests/test-tubester-*.c`, using that plugin's build, CI, formatters and lo
   in a URL, the scene file or the logs. The page reports with POST to a listener on `127.0.0.1:0`, as `text/plain` to
   avoid a CORS preflight.
 - Handshake runs per page load. Reports carry deck id, page incarnation, load generation and sequence, so stale ones are
-  ignored. Removing a deck unregisters it under a lock. The shared listener stops last, closing open sockets.
+  ignored. Removing a deck unregisters it under a lock. The shared listener stops at module unload; a deck destroyed
+  after that unregisters under a lock that is never destroyed and finds nothing.
 - `deck.html`, one file, no build step: `<video>`, rate, pitch, loop, states.
 - Deck states: Ready, Playing, Paused, Ended, Cannot play this file, No connection.
 
 **Steps, each with Sonnet 5.5 QA of its diff before commit:**
 1. Skeleton, CI, core with tests.
 2. Filter loads a tape; `deck.html` plays it.
-3. Listener, hello handshake, honest states.
+3. Listener, hello handshake, honest states. The listener and the handshake landed in step 2. Honest states still
+   to do: compare the rate, tape and position the page reports with what the deck asked for.
 4. Speed and pitch: settings, hotkeys, coalescing, replay.
-5. Transport. A two-deck independence check.
+5. Transport. A two-deck independence check. Also a Cue action (go to the start position now; changing the start
+   position only applies at the next tape load), and a page reload must keep a paused deck paused (the tape command
+   plays at once today).
 6. Knob route: a separate commit in the Fadester repository so the bridge sends speed to a deck.
 7. Codex review of the whole, then the operator's hardware test.
 
@@ -167,6 +175,10 @@ and the on-screen effects stay off those decks. Tubester never downloads from Yo
   learns them.
 - A DLL loaded by OBS is expected to avoid SmartScreen. Unverified.
 - The OBS forum bars mostly AI-written resources and "OBS" in a brand, so assume no forum listing.
+- The hello carries the token to whatever page the Browser source shows. After the deck changes the source's address
+  it waits for the source's update, which covers a source that showed another page. A browser for an old address still
+  being created at that moment could in theory get the hello (step 2 review). A later hardening could let only a
+  local file page obtain the token.
 
 ## 10. Design phase results, 2026-11-07
 
