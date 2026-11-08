@@ -4,6 +4,8 @@ The coordinated development version is **0.6.0**, shared with Midi Fadester and 
 
 **Visual Sidechain** is an FFT-reactive GPU shader filter suite and sibling-filter Audio Modulator for OBS Studio 33 on Windows x64 (NVIDIA RTX first). By default it taps **Track 1 (the main mix)** (or any individual OBS audio source / mixer track), runs a real-time dual-resolution Hann-windowed FFT (**4096-point** for high-resolution sub-bass and kick detection $\le 250\text{ Hz}$ paired with **2048-point** for low-latency mids and highs), uploads a `512x2` GPU FFT + waveform texture (`audio_fft`) and a `32x1` logarithmic spectrum texture (`audio_spectrum`), and drives 11 original `GPL-2.0-or-later` FFT-reactive shaders (**FFT Spectral Edge / Border Aura**, **FFT Wave Warp & Glitch**, **FFT Chromatic Prism & Bloom**, **FFT Visualizer Overlays**, **FFT Zoom Pulse & Barrel Lens**, **FFT Kaleidoscope**, **FFT Feedback Trails**, **FFT Strobe & Flash**, **FFT Mirror & Split**, **FFT Hex Pulse Lattice**, and **FFT Polygon Tunnel**) plus the **Audio Modulator** filter for sidechaining sibling filters—including OBS 33's built-in **NVIDIA Blur**, **NVIDIA Background Blur**, and **NVIDIA Background Removal**. All audio and beat signals are also available over the `obs-websocket` 5 vendor API (`vendor_name = "visual-sidechain"`), and all 18 Fadester slots (`crossfader`, `fader_1`..`fader_8`, `master`, `fx_1`..`fx_8`) can act as modulation sources in the Audio Modulator and as float uniforms (`fader_crossfader`, `fader_1`..`fader_8`, `fader_master`, `fader_fx_1`..`fader_fx_8`) in shaders.
 
+It also has a **[Tape Deck](#tape-deck)**: a filter that turns a Browser Source into a tape deck for a local video file, with speed from 25 % to 800 % that changes in place, transport, hotkeys and Fadester control.
+
 ![Visual Sidechain in OBS Studio 33: the Program scene "Visual Sidechain" shows the FFT Hex Pulse Lattice shader reacting to the soundtrack, with Studio Mode previewing a layer mix. A frame of a real OBS window capture.](docs/images/visual-sidechain-hero.png)
 
 > **Disclaimer:** Visual Sidechain is an independent third-party plugin for OBS Studio. It is not made, endorsed, or supported by the OBS Project or NVIDIA Corporation.
@@ -36,6 +38,39 @@ Assignment summaries show the selected fader, destination, and range. Reset butt
 
 Custom shader parameters can use `effect_mix` and `audio_reactivity` independently of the host's percent sliders. Names that collide with internal controls, such as `preset_shader`, `custom_low_hz`, or `vs_effect_mix_pct`, produce a compile message identifying the parameter to rename. A failed shader passes the source through until a valid shader is loaded. In full-effect mode, `vs_effect_mix` and `vs_reactivity_scale` are host-supplied uniforms, so they do not appear as editable shader parameters.
 
+## Tape Deck
+
+**`Visual Sidechain: Tape Deck`** turns a Browser Source into a tape deck for a video file on this computer or a network share. Speed runs from 25 % to 800 % and changes in place, picture and sound, with no restart. Nothing is downloaded. (Tubester is its code name in the source tree.)
+
+**First five minutes**
+
+1. Add a **Browser Source** to a scene. Its address does not matter: the deck sets the source up for itself (the deck page as its address, **Control audio via OBS** on, **Shutdown source when not visible** and **Refresh browser when scene becomes active** off).
+2. Right-click the Browser Source -> **Filters** -> **Effect Filters (`+`)** -> **`Visual Sidechain: Tape Deck`**.
+3. Choose a video file under **Tape**. It plays at once, looping.
+4. Move **Speed**. With **Tape pitch** ticked the sound drops and rises with the speed, like a tape; unticked, the pitch stays put.
+
+The line at the top of the filter's Properties says what the deck's page last reported, for example "Playing. Speed 150%, at 0:42 of 2:02." It is a snapshot: press **Refresh Status** to read it again. Properties never refreshes itself, so it never takes the focus from what you are editing. The deck's sound reaches OBS's mixer through the Browser Source.
+
+**Controls**
+
+- **Playing**: untick to pause where the tape is, tick to play on. A paused deck stays paused through a page reload, and loads a new tape paused at its start position. After a tape without **Loop** has ended, it reads Ended until you play it again: press **Play / Pause**, or untick and tick **Playing** (it is still ticked after the end). Either starts it from **Start position**.
+- **Cue to Start**: goes to **Start position**. A playing deck plays on from there; a paused deck stays paused.
+- **Start position** (seconds): where a tape starts when it is loaded, when it is cued, and when it plays again after the end.
+- **Speed Fader (Midi & Stream Deck Fadester)**: bind any of the 18 Fadester slots to drive the speed between **Speed at Fader Bottom** and **Speed at Fader Top**. The scale is a ratio: equal fader travel gives an equal speed ratio, so with 50 % at the bottom and 200 % at the top the middle is 100 %. The Speed slider is left as it is, and applies again when you press **Clear Speed Fader**. Without Midi Fadester the slider applies, and the status line under the binding says so.
+- **Hotkeys** (Settings -> Hotkeys, listed under the Browser Source's own name): **Tape Deck: Play / Pause** (on a tape that has ended it plays again from the start position), **Cue to Start**, **Speed Up** and **Speed Down** (along 25, 50, 75, 100, 125, 150, 200, 300, 400, 600 and 800 %), and **Normal Speed**. The speed hotkeys move the Speed setting; while a Speed Fader is live, the fader keeps the speed. Bindings are saved with the source, and a deck you remove and bring back with Undo keeps them.
+
+**Two decks, hidden decks.** Each Browser Source holds one deck. A second Tape Deck on the same source waits and says so, and takes over if the first is removed (with whatever hotkey bindings the source last saved). A deck whose source is hidden keeps its tape loaded and playing, without sound. Visual Sidechain's Panic and Restore leave decks alone.
+
+**What plays.** With picture and seeking: H.264 in MP4, MKV and MOV (also 10-bit and 4:2:2), VP9 in WebM, AV1 in MP4, and HEVC in MP4 where this PC's hardware decodes it. Sound plays from AAC, MP3 and Opus; AC-3 gives picture without sound. MPEG-2, MJPEG and DXV files give "Cannot play this file", and MPEG-4 Part 2, Theora and ProRes play sound only ("No picture in this file"). Convert those with FFmpeg, for example:
+
+```bash
+ffmpeg -i input.mov -c:v libx264 -crf 18 -preset slow -pix_fmt yuv420p -c:a aac -b:a 192k -movflags +faststart output.mp4
+```
+
+**From a Stream Deck or OpenDeck dial (Fadester for OBS).** Add an **OBS Filter** action, choose the Browser Source and its **Tape Deck** filter, pick the setting **`speed_percent`**, and give the range **From 25 To 800** with **Whole numbers** on. The dial then rides the speed in a straight line; pressing it drops the deck to 25 % while held. Fadester for OBS needs no change for this. For the ratio scale, bind the slot as a Speed Fader instead (above). Do not do both for one deck: while the Speed Fader is live, the dial only changes the Speed setting, which applies once the fader is cleared.
+
+**Over `obs-websocket`.** `SetSourceFilterSettings` on the deck filter accepts `tape` (a full path), `speed_percent` (25 to 800), `tape_pitch`, `loop`, `start_seconds`, `playing`, `speed_fader_slot` (-1 for none, 0 to 17 in the order crossfader, fader 1 to 8, master, FX 1 to 8), `speed_fader_min_percent` and `speed_fader_max_percent`. `TriggerHotkeyByName` reaches the hotkeys: `hotkeyName` is `tubester_deck.play_pause`, `tubester_deck.cue_to_start`, `tubester_deck.speed_up`, `tubester_deck.speed_down` or `tubester_deck.normal_speed`, and `contextName` is the Browser Source's name. To play an ended tape again over obs-websocket, trigger `tubester_deck.play_pause`. Writing `playing` false and then true works only if the deck has taken the first write before the second arrives: OBS applies a filter's settings once per frame, so two quick writes merge into one with no change. Wait until `get_decks` shows `playing: false` before writing true. `get_decks` (below) reads every deck's state. The deck writes one more setting itself, `hotkey_bindings`, a copy of its hotkey bindings; leave it alone.
+
 ## `obs-websocket` 5 Vendor API
 
 ### Midi Fadester and Stream Deck integration
@@ -49,7 +84,7 @@ Midi's **Clean / All FX Off** resets enabled `filter_param` bindings in either b
 - **Vendor Name:** `"visual-sidechain"`
 - **Request:** `CallVendorRequest` with `vendorName: "visual-sidechain"`, `requestType: "get_signals"` returns `{ success, version, api_version: 1, level, sub_bass, bass, mid, high, kick, snare, beat, beat_phase, spectral_centroid, spectral_flux, estimated_bpm, bpm, spectrum: [{ band: 0..31, value }] }`.
 - **Event:** `VendorEvent` (`vendorName: "visual-sidechain"`, `eventType: "signals_changed"`) streams the same payload coalesced to at most 30 events/sec.
-- **Request:** `requestType: "get_decks"` returns every Tape Deck as its page last reported it: `{ success, api_version: 1, decks: [{ source, filter, deck_id, role, state, tape, speed_percent, effective_speed_percent, speed_fader, tape_pitch, loop, start_seconds, linked, reported? }] }`. `speed_percent` is the Speed setting; `effective_speed_percent` is the speed the deck asks for, which is the Speed Fader's while that fader is live. `speed_fader` is `{ slot, slot_id, min_percent, max_percent, live }`: `slot` is -1 and `slot_id` empty when no fader is bound, and `live` is true while the bound fader drives the speed. `role` is `owner`, `waiting` (another deck drives that Browser Source), `pending`, `wrong_parent` or `detached`. `reported` (`current_tape, rate, position, duration, paused, ended, ready_state, error, no_picture`) is present only while `linked` is true; `current_tape` is false while it still describes an earlier tape. Read-only: change a deck with `SetSourceFilterSettings`.
+- **Request:** `requestType: "get_decks"` returns every Tape Deck as its page last reported it: `{ success, api_version: 1, decks: [{ source, filter, deck_id, role, state, tape, speed_percent, effective_speed_percent, speed_fader, tape_pitch, playing, loop, start_seconds, linked, reported? }] }`. `playing` is the Playing setting; `state` and `reported` say what the page does. `speed_percent` is the Speed setting; `effective_speed_percent` is the speed the deck asks for, which is the Speed Fader's while that fader is live. `speed_fader` is `{ slot, slot_id, min_percent, max_percent, live }`: `slot` is -1 and `slot_id` empty when no fader is bound, and `live` is true while the bound fader drives the speed. `role` is `owner`, `waiting` (another deck drives that Browser Source), `pending`, `wrong_parent` or `detached`. `reported` (`current_tape, rate, position, duration, paused, ended, ready_state, error, no_picture`) is present only while `linked` is true; `current_tape` is false while it still describes an earlier tape. Read-only: change a deck with `SetSourceFilterSettings`.
 
 ## Languages
 
