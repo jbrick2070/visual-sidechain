@@ -53,7 +53,7 @@ The line at the top of the filter's Properties says what the deck's page last re
 
 **Controls**
 
-- **Playing**: untick to pause where the tape is, tick to play on. A paused deck stays paused through a page reload, and loads a new tape paused at its start position. After a tape without **Loop** has ended, it reads Ended until you play it again: press **Play / Pause**, or untick and tick **Playing** (it is still ticked after the end). Either starts it from **Start position**.
+- **Playing**: untick to pause where the tape is, tick to play on. A paused deck stays paused through a page reload, and loads a new tape paused at its start position. After a tape without **Loop** has ended, it reads Ended until you play it again: press the **Play / Pause** hotkey, or untick and tick **Playing** (it is still ticked after the end). Either starts it from **Start position**.
 - **Cue to Start**: goes to **Start position**. A playing deck plays on from there; a paused deck stays paused.
 - **Start position** (seconds): where a tape starts when it is loaded, when it is cued, and when it plays again after the end. A start position at or past the end of the tape counts as 0.
 - **Speed Fader (Midi & Stream Deck Fadester)**: bind any of the 18 Fadester slots to drive the speed between **Speed at Fader Bottom** and **Speed at Fader Top**. The scale is a ratio: equal fader travel gives an equal speed ratio, so with 50 % at the bottom and 200 % at the top the middle is 100 %. The Speed slider is left as it is, and applies again when you press **Clear Speed Fader**. Without Midi Fadester the slider applies, and the status line under the binding says so.

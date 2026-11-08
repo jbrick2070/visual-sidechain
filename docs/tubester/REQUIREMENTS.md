@@ -39,7 +39,7 @@ Conventions: `R-*` rows are requirements, hard unless marked soft. `F-*` rows ar
 | R-DCK-6 | Decks are independent. A command to one deck never reaches another. |
 | R-DCK-7 | Deck states, shown from what the player reported and never assumed: Ready, Playing, Paused, Ended, Cannot play this file, No picture in this file, No connection. |
 | R-DCK-8 | A deck that is playing but has not moved for one second recovers by itself with a seek to its current place, and logs that it did. |
-| R-DCK-9 | **(I)** The Properties status is a snapshot of what the page last reported: the state, and while a tape is known its speed and position ("Playing at 150 %, 0:42 of 2:02"), with a Refresh Status button. Properties is never rebuilt behind the operator's back, because a rebuild takes the focus from whatever is being edited (D-12). |
+| R-DCK-9 | **(I)** The Properties status is a snapshot of what the page last reported: the state, and while a tape is known its speed and position ("Playing. Speed 150%, at 0:42 of 2:02."), with a Refresh Status button. Properties is never rebuilt behind the operator's back, because a rebuild takes the focus from whatever is being edited (D-12). |
 | R-DCK-10 | **(I)** Self-repair, from the reports: a speed or play state the page did not take is sent again, and a tape or eject command the page never acknowledged is sent again after 3 s. Each repair is logged once per occurrence. |
 
 ## 4. Speed

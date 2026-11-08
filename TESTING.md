@@ -150,7 +150,7 @@ The Shader Filter's Restore now writes back only the parameters Panic zeroed and
 
 ## Tape Deck integration (Tubester steps 3 to 5 and the phase review, 2026-11-07)
 
-These runs used a portable OBS 33.0.1 test copy (`C:\Users\jeffr\OBS-Studio-33-Portable-Tubester`), started and stopped by obs-playlister's probe scripts `docs/tubester/probes/step3.mjs`, `step4.mjs` and `step5.mjs` (git-ignored there). Each run ends with a normal OBS exit whose log reads `Number of memory leaks: 0`. `ctest` passes 33/33 in RelWithDebInfo and Debug after each step. Hotkeys were mostly pressed with obs-websocket `TriggerHotkeyByName`, which calls the same callback as a key press but from obs-websocket's thread; TD.13 adds a real key press, which OBS hands to its UI thread. Midi Fadester was the operator's installed build, copied into the test copy for the run and driven with its own vendor request `set_fader_value`, not a hardware fader.
+These runs used a portable OBS 33.0.1 test copy (`C:\Users\jeffr\OBS-Studio-33-Portable-Tubester`), started and stopped by obs-playlister's probe scripts `docs/tubester/probes/step3.mjs`, `step4.mjs`, `step5.mjs` and `step6.mjs` (git-ignored there). Each run ends with a normal OBS exit whose log reads `Number of memory leaks: 0`. `ctest` passes 33/33 in RelWithDebInfo and Debug after each step. Hotkeys were mostly pressed with obs-websocket `TriggerHotkeyByName`, which calls the same callback as a key press but from obs-websocket's thread; TD.13 adds a real key press, which OBS hands to its UI thread. Midi Fadester was the operator's installed build, copied into the test copy for the run and driven with its own vendor request `set_fader_value`, not a hardware fader.
 
 | Check | Evidence | Result |
 |-------|----------|--------|
