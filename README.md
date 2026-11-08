@@ -26,7 +26,7 @@ Download the latest release from [GitHub Releases](https://github.com/jbrick2070
 2. **Photosensitivity & Panic Hotkeys (`Settings -> Hotkeys`):**
    - **`Visual Sidechain: Panic`** immediately puts every `Visual Sidechain: Shader Filter` (including custom user shaders) into pass-through and zeroes all strobe, flash, and modulation amounts across OBS.
    - **`Visual Sidechain: Restore`** exits pass-through and restores pre-panic amounts.
-   - `FFT Strobe & Flash` defaults to a **3.0 Hz** maximum flash rate cap per photosensitivity guidelines.
+   - **`FFT Strobe & Flash`** allows at most **3 flashes per second** per filter. **`Maximum Flash Rate (Hz)`** is adjustable from 0.5 to 3 (default 3), and Visual Sidechain itself skips any trigger that comes faster, whatever the audio. Your footage, several strobe filters at once and other effects can still add flashes, so check the final output before you stream, record or project it, and bind **`Visual Sidechain: Panic`** for an instant stop.
 
 ## Geometric presets and fader assignments
 
@@ -36,7 +36,7 @@ Download the latest release from [GitHub Releases](https://github.com/jbrick2070
 
 Assignment summaries show the selected fader, destination, and range. Reset buttons affect only their named binding: a parameter reset clears its target and custom range, while a Modulator depth reset keeps the target, driving signal, and amount. Within a Shader Filter, the first parameter assignment owns its target even when it uses the slider value. Within an Audio Modulator, the first enabled slot owns each filter/setting pair. Conflicting choices are disabled, and duplicate assignments loaded from settings are cleared by the existing ownership rules.
 
-Custom shader parameters can use `effect_mix` and `audio_reactivity` independently of the host's percent sliders. Names that collide with internal controls, such as `preset_shader`, `custom_low_hz`, or `vs_effect_mix_pct`, produce a compile message identifying the parameter to rename. A failed shader passes the source through until a valid shader is loaded. In full-effect mode, `vs_effect_mix` and `vs_reactivity_scale` are host-supplied uniforms, so they do not appear as editable shader parameters.
+Custom shader parameters can use `effect_mix` and `audio_reactivity` independently of the host's percent sliders. Names that collide with internal controls, such as `preset_shader`, `custom_low_hz`, or `vs_effect_mix_pct`, produce a compile message identifying the parameter to rename. A failed shader passes the source through until a valid shader is loaded. In full-effect mode, `vs_effect_mix`, `vs_reactivity_scale` and `vs_flash_envelope` are host-supplied uniforms, so they do not appear as editable shader parameters. `vs_flash_envelope` (0 to 1) is the flash limiter's output that FFT Strobe & Flash draws with; a custom shader can use it too, and its own `onset_threshold` and `max_flash_rate_hz` parameters, if it declares them, set the limiter's trigger threshold and rate.
 
 ## Tape Deck
 

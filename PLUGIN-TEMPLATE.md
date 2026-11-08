@@ -29,6 +29,11 @@ and the legacy install layout.
   argument (the platform lists sit in a `# gersemi: off` block so `-G`/`-A` stay next to their values);
   `-DENABLE_FRONTEND:BOOL=OFF` and `-DENABLE_SCRIPTING:BOOL=OFF`, passed on every platform, replace the ignored
   `ENABLE_UI` and the misspelled `CMAKE_ENABLE_SCRIPTING`; `CMAKE_PREFIX_PATH` is passed without literal quotes.
+- Dependency download (`cmake/common/buildspec_common.cmake`): while the recorded dependency hash differs from
+  `buildspec.json`, an existing archive whose SHA256 does not match (a partial download) is removed and downloaded
+  again, and a failed download is removed before the configure stops. The template skips any existing archive, and
+  its `file(REMOVE)` comes after `message(FATAL_ERROR)`, so it never runs: one partial download broke every later
+  configure.
 - `cmake/common/bootstrap.cmake` registers `buildspec.json` as a configure dependency, so a version bump reaches
   `data/manifest.json` and the version resource without a manual reconfigure.
 - Default install prefix (`cmake/windows/defaults.cmake`): `%ALLUSERSPROFILE%/obs-studio/plugins`, as in template

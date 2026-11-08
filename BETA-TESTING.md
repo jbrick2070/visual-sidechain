@@ -12,7 +12,7 @@ Thank you for beta testing **Visual Sidechain**! This single-page guide takes ab
 
 - **Required OBS Version:** **OBS Studio 33.0.0 or newer** on **Windows 10 / 11 (x64)**. Visual Sidechain uses OBS 33's unified plugin package layout (`plugins\visual-sidechain\`) and will not load in OBS 30-32.
 - **Photosensitivity Warning:** Audio-reactive shaders (especially `FFT Strobe & Flash`) can produce rapid brightness, contrast, or pattern changes.
-  - `FFT Strobe & Flash` defaults to a **3.0 Hz** maximum flash rate cap per photosensitivity guidelines.
+  - `FFT Strobe & Flash` allows at most **3 flashes per second** per filter: **`Maximum Flash Rate (Hz)`** is adjustable from 0.5 to 3 (default 3), and Visual Sidechain skips any trigger that comes faster. Your footage, several strobe filters at once and other effects can still add flashes, so check the final output before you stream, record or project it, and bind **`Visual Sidechain: Panic`** (below) for an instant stop.
   - Before testing on live or high-contrast footage, open **`Settings -> Hotkeys`**, filter for **`Visual Sidechain`**, and bind:
     - **`Visual Sidechain: Panic`** — immediately puts every `Visual Sidechain: Shader Filter` (including custom user shaders) into unmodified pass-through and zeroes all strobe, flash, and modulation amounts across OBS.
     - **`Visual Sidechain: Restore`** — exits pass-through and restores your pre-panic amounts.

@@ -65,6 +65,37 @@ static bool enum_restore_sources_cb(void *param, obs_source_t *source)
 	return true;
 }
 
+/* Lock order. libobs calls the hotkey callbacks below with its hotkey lock held (obs->hotkeys.mutex), and
+ * obs_enum_all_sources takes the sources lock (obs->data.sources_mutex). The frontend's scene-collection save takes
+ * them the other way round: OBSBasic::Save -> obs_save_sources_filtered holds the sources lock for its whole source
+ * loop, and obs_save_source -> obs_hotkeys_save_source takes the hotkey lock for every source and filter. A Panic or
+ * Restore from obs-websocket's thread (TriggerHotkeyByName) during a save would therefore deadlock OBS. So the
+ * callbacks only set or clear the panic flag, which at once makes every Shader Filter pass through and stops every
+ * Audio Modulator on its next tick, and these tasks walk the sources on the UI thread. Posted from obs-websocket's
+ * thread, a task runs after the hotkey lock is released; from a key press, which the frontend runs on the UI thread,
+ * it runs in place, on the save's own thread, so a walk and a save never overlap. */
+static void panic_walk_task(void *param)
+{
+	UNUSED_PARAMETER(param);
+	/* A Restore since this task was queued wins: the walk always ends matching the flag. */
+	if (!vs_fader_bridge_is_panic_active())
+		return;
+	obs_enum_all_sources(enum_panic_sources_cb, NULL);
+	obs_log(LOG_INFO,
+		"Panic hotkey triggered: shader filters set to pass-through and all strobe, flash, and modulation amounts zeroed");
+}
+
+static void restore_walk_task(void *param)
+{
+	UNUSED_PARAMETER(param);
+	/* A Panic since this task was queued wins: the walk always ends matching the flag. */
+	if (vs_fader_bridge_is_panic_active())
+		return;
+	obs_enum_all_sources(enum_restore_sources_cb, NULL);
+	obs_log(LOG_INFO,
+		"Restore hotkey triggered: shader filters restored from pass-through and pre-panic amounts restored");
+}
+
 static void on_panic_hotkey(void *data, obs_hotkey_id id, obs_hotkey_t *hotkey, bool pressed)
 {
 	UNUSED_PARAMETER(data);
@@ -73,9 +104,7 @@ static void on_panic_hotkey(void *data, obs_hotkey_id id, obs_hotkey_t *hotkey, 
 	if (!pressed)
 		return;
 	vs_fader_bridge_trigger_panic();
-	obs_enum_all_sources(enum_panic_sources_cb, NULL);
-	obs_log(LOG_INFO,
-		"Panic hotkey triggered: shader filters set to pass-through and all strobe, flash, and modulation amounts zeroed");
+	obs_queue_task(OBS_TASK_UI, panic_walk_task, NULL, false);
 }
 
 static void on_restore_hotkey(void *data, obs_hotkey_id id, obs_hotkey_t *hotkey, bool pressed)
@@ -86,9 +115,7 @@ static void on_restore_hotkey(void *data, obs_hotkey_id id, obs_hotkey_t *hotkey
 	if (!pressed)
 		return;
 	vs_fader_bridge_trigger_restore();
-	obs_enum_all_sources(enum_restore_sources_cb, NULL);
-	obs_log(LOG_INFO,
-		"Restore hotkey triggered: shader filters restored from pass-through and pre-panic amounts restored");
+	obs_queue_task(OBS_TASK_UI, restore_walk_task, NULL, false);
 }
 
 /* Shown by the OBS 33 Plugin Manager when data/manifest.json gives no display name. Keep both strings in sync
