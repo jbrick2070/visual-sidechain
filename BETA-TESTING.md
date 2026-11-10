@@ -1,6 +1,6 @@
 # Visual Sidechain -- Beta Tester Guide (OBS Studio 33, Windows x64)
 
-Thank you for beta testing **Visual Sidechain**! This single-page guide takes about **10 minutes** in OBS Studio 33 and walks through installing the plugin, setting up the photosensitivity safety hotkeys, testing the 11 built-in FFT-reactive GPU shaders, testing sibling-filter sidechaining with the **Audio Modulator**, and filing your hardware report.
+Thank you for beta testing **Visual Sidechain**! This single-page guide takes about **10 minutes** in OBS Studio 33 and walks through installing the plugin, setting up the photosensitivity safety hotkeys, testing the 11 built-in FFT-reactive GPU shaders, testing sibling-filter sidechaining with the **Audio Modulator**, trying the **Tape Deck**, and filing your hardware report.
 
 - **Project & Docs (`main`):** https://github.com/jbrick2070/visual-sidechain
 - **Latest Release Downloads:** https://github.com/jbrick2070/visual-sidechain/releases/latest
@@ -12,10 +12,10 @@ Thank you for beta testing **Visual Sidechain**! This single-page guide takes ab
 
 - **Required OBS Version:** **OBS Studio 33.0.0 or newer** on **Windows 10 / 11 (x64)**. Visual Sidechain uses OBS 33's unified plugin package layout (`plugins\visual-sidechain\`) and will not load in OBS 30-32.
 - **Photosensitivity Warning:** Audio-reactive shaders (especially `FFT Strobe & Flash`) can produce rapid brightness, contrast, or pattern changes.
-  - `FFT Strobe & Flash` allows at most **3 flashes per second** per filter: **`Maximum Flash Rate (Hz)`** is adjustable from 0.5 to 3 (default 3), and Visual Sidechain skips any trigger that comes faster. Your footage, several strobe filters at once and other effects can still add flashes, so check the final output before you stream, record or project it, and bind **`Visual Sidechain: Panic`** (below) for an instant stop.
+  - `FFT Strobe & Flash` allows at most **3 flashes per second** per filter: **`Maximum Flash Rate (Hz)`** is adjustable from 0.5 to 3 (default 3), and Visual Sidechain skips any trigger that comes faster. Your footage, several strobe filters at once and other effects can still add flashes, so check the final output before you stream, record or project it, and bind **`Visual Sidechain: Panic (all effects off)`** (below) for an instant stop.
   - Before testing on live or high-contrast footage, open **`Settings -> Hotkeys`**, filter for **`Visual Sidechain`**, and bind:
-    - **`Visual Sidechain: Panic`** — immediately puts every `Visual Sidechain: Shader Filter` (including custom user shaders) into unmodified pass-through and zeroes all strobe, flash, and modulation amounts across OBS.
-    - **`Visual Sidechain: Restore`** — exits pass-through and restores your pre-panic amounts.
+    - **`Visual Sidechain: Panic (all effects off)`** — immediately puts every `Visual Sidechain: Shader Filter` (including custom user shaders) into unmodified pass-through and zeroes all strobe, flash, and modulation amounts across OBS.
+    - **`Visual Sidechain: Restore (effects on again)`** — exits pass-through and restores your pre-panic amounts.
 
 ---
 
@@ -34,10 +34,10 @@ Close OBS Studio, then choose the package from [GitHub Releases](https://github.
 > - On either `.zip`, right-click the downloaded `.zip` -> **Properties -> check "Unblock" -> OK** before extracting.
 > - *(Note: Windows 11 machines with **Smart App Control** set to strict enforcement block all unsigned third-party DLLs by OS policy.)*
 
-**Verify load:** Start OBS Studio 33, open **`Help -> Log Files -> View Current Log`**, and confirm you see:
+**Verify load:** Start OBS Studio 33, open **`Help -> Log Files -> View Current Log`**, and confirm you see (the vendor line appears only when obs-websocket is loaded):
 ```text
-[visual-sidechain] plugin loaded successfully (version 0.5.1)
-[visual-sidechain] Registered obs-websocket vendor 'visual-sidechain' (get_signals=1)
+[visual-sidechain] plugin loaded successfully (version 0.6.0)
+[visual-sidechain] Registered obs-websocket vendor 'visual-sidechain' (get_signals=1, get_decks=1)
 ```
 
 ---
@@ -46,22 +46,22 @@ Close OBS Studio, then choose the package from [GitHub Releases](https://github.
 
 1. Play any music track or drum loop in OBS that routes to **Track 1** (Desktop Audio, a Media Source, or an Application Audio Capture source).
 2. Right-click a video source (Webcam, Media Source, Game Capture, or Scene) -> **`Filters`** -> under **Effect Filters**, click **`+`** -> **`Visual Sidechain: Shader Filter`**.
-3. Leave **`Audio Input Source`** on **`Track 1 (Main Mix - Default)`** and step through the **`Built-in Shader Preset`** dropdown:
+3. The line at the top of the filter's window should begin **`Listens to Track 1 (Main Mix).`** Leave **`Audio Input`** (in the last group, **`Audio Sidechain & Analysis`**) on **`Track 1 (Main Mix)`** and step through the **`Shader Preset / Mode`** dropdown:
    - `FFT Spectral Edge / Border Aura`
    - `FFT Wave Warp & Glitch`
    - `FFT Chromatic Prism & Bloom`
-   - `FFT Visualizer Overlays` *(try switching the `Overlay Mode` dropdown between Spectrum Bars, Oscilloscope, and Radial Ring)*
+   - `FFT Visualizer Overlays` *(try switching **`Visualizer Mode`** between `Bars + Oscilloscope`, `Polar Spectrum Ring` and `Spectrum Bars Only`)*
    - `FFT Zoom Pulse & Barrel Lens`
    - `FFT Kaleidoscope`
    - `FFT Feedback Trails`
-   - `FFT Strobe & Flash`
-   - `FFT Mirror & Split` *(try switching the `Mirror Mode` dropdown)*
-   - `FFT Hex Pulse Lattice` *(try cell density and overlay opacity; bass expands the outlines)*
-   - `FFT Polygon Tunnel` *(try three, six, and eight sides, then vary depth and travel speed)*
-4. Press your **`Visual Sidechain: Panic`** hotkey while music is playing:
-   - Confirm the video immediately drops back to clean, unmodified pass-through.
-   - Press **`Visual Sidechain: Restore`** and confirm the shader resumes at its prior intensity.
-5. Under **Fader Control**, assign a fader to a geometric parameter and check that its summary matches the target and range. Reset that assignment and confirm the parameter returns to its slider value. A second assignment cannot select a target already owned by the first. Test on a source with transparency and confirm the new geometric overlays stay within the visible source.
+   - `FFT Strobe & Flash` *(the line under **`Maximum Flash Rate (Hz)`** should say that it allows at most 3 flashes per second)*
+   - `FFT Mirror & Split` *(try switching **`Mirror Mode`**)*
+   - `FFT Hex Pulse Lattice` *(try **`Cell Density`** and **`Lattice Opacity`**; bass expands the outlines)*
+   - `FFT Polygon Tunnel` *(try three, six and eight **`Polygon Sides`**, then vary **`Tunnel Depth`** and **`Travel Speed`**)*
+4. Press your **`Visual Sidechain: Panic (all effects off)`** hotkey while music is playing:
+   - Confirm the video immediately drops back to clean, unmodified pass-through, and that the top of the filter's window now reads **`Panic is on.`**
+   - Press **`Visual Sidechain: Restore (effects on again)`** and confirm the shader resumes at its prior intensity and the Panic line is gone.
+5. Under **`Fader Control (Midi & Stream Deck Fadester)`**, assign a fader to a geometric parameter and check that its summary matches the target and range. Reset that assignment and confirm the parameter returns to its slider value. A second assignment cannot select a target already owned by the first. Test on a source with transparency and confirm the new geometric overlays stay within the visible source.
 
 ---
 
@@ -70,10 +70,10 @@ Close OBS Studio, then choose the package from [GitHub Releases](https://github.
 1. On the same video source, add any standard OBS filter above or below—for example **`Color Correction`** (or, on an NVIDIA RTX GPU with the NVIDIA Broadcast SDK installed, **`NVIDIA Blur`**, **`NVIDIA Background Blur`**, or **`NVIDIA Background Removal`**).
 2. Set a recognizable baseline value on that target filter (for example, set `Color Correction -> Saturation` to `0.00` or `Contrast` to `0.25`).
 3. Click **`+`** -> **`Visual Sidechain: Audio Modulator`**.
-4. In **Slot 1**:
-   - Check **`Enable Slot 1`**.
-   - Pick your **`Target Filter`** (e.g. `Color Correction`) and **`Target Setting`** (e.g. `Saturation` or `Contrast`).
-   - Confirm **`Minimum Output`** and **`Maximum Output`** auto-populate to sensible bounds for that setting, then adjust **`Minimum` / `Maximum`** and **`Amount (%)`** so you can clearly see the filter pulsing to **`Kick Onset`** or **`Bass (60-250 Hz)`**.
+4. In **`Modulation Slot 1`**:
+   - Check **`Enable Slot`**.
+   - Pick your **`Target Sibling Filter`** (e.g. `Color Correction`) and **`Target Filter Setting`** (e.g. `Saturation` or `Contrast`).
+   - Confirm **`Modulation Slot 1: Minimum Target Value`** and **`Modulation Slot 1: Maximum Target Value`** fill in with sensible bounds for that setting. Then set **`Driving Audio Signal`** to **`Kick Onset (55-130 Hz Flux)`** or **`Bass (20-250 Hz, 4096-pt FFT)`**, and adjust the two values and **`Modulation Slot 1: Modulation Amount (Negative = Ducking)`** until you can clearly see the filter pulsing. The line at the bottom of the slot names what moves and by how much.
 5. **Baseline safety check:**
    - Toggle the eye icon next to `Visual Sidechain: Audio Modulator` off (disable it) -> open `Color Correction` and confirm your exact baseline value was restored.
    - Re-enable `Visual Sidechain: Audio Modulator` while audio is actively pulsing, **close OBS completely**, and **reopen OBS** -> confirm your scene saved your original baseline rather than a mid-beat spike.
@@ -82,13 +82,14 @@ Close OBS Studio, then choose the package from [GitHub Releases](https://github.
 
 ## Step 4 -- Optional Checks (If Applicable to Your Rig)
 
-- **Audio Routing & Ghost Sidechain:** Switch **`Audio Input Source`** to **`Specific Audio Source`**, pick a muted drum/click track, and enable **`React When Source Is Muted (Ghost Sidechain)`** so visuals react to an inaudible trigger track. Also try selecting **`Parent Source Audio`** on a non-audio source (like a Color Source or Image) to confirm the inline warning banner appears cleanly in Properties.
-- **Audio-to-Video Sync Offset (`-200..+500 ms`):** If your audio monitoring path or capture card adds delay, adjust **`Audio-to-Video Sync Offset (ms)`** until beat hits line up visually with what you hear.
-- **NVIDIA RTX 50-Series (Blackwell) Note:** On RTX 50-series GPUs with NVIDIA Video Effects SDK `0.7.6.0`, modulating `threshold` on `NVIDIA Background Removal` updates at full frame rate, whereas modulating `intensity` on `NVIDIA Blur` / `Background Blur` reloads `NvVFX_Load`—set **`Update Rate Divider`** on that slot to **`Every 2 Frames`** or **`Every 4 Frames`**.
+- **Audio Routing & Ghost Sidechain:** Switch **`Audio Input`** to **`Specific Audio Source`**, pick a muted drum/click track under **`Audio Source`**, and enable **`React When Source Is Muted (Ghost Sidechain)`** so visuals react to an inaudible trigger track. Also try selecting **`Parent Source Audio`** on a non-audio source (like a Color Source or Image) to confirm the inline warning banner appears cleanly in Properties.
+- **Audio-to-Video Sync Offset (`-200..+500 ms`):** If your audio monitoring path or capture card adds delay, adjust **`Audio-to-Video Sync Offset`** until beat hits line up visually with what you hear.
+- **NVIDIA RTX 50-Series (Blackwell) Note:** On RTX 50-series GPUs with NVIDIA Video Effects SDK `0.7.6.0`, modulating `threshold` on `NVIDIA Background Removal` updates at full frame rate, whereas modulating `intensity` on `NVIDIA Blur` / `Background Blur` reloads `NvVFX_Load`—set **`Target Update Rate`** on that slot to **`Every 2 Frames (1/2x)`** or **`Every 4 Frames (1/4x)`**.
 - **Midi Fadester & Stream Deck Fadester Pairing:** If you also have [Midi Fadester](https://github.com/jbrick2070/midi-fadester) installed in `plugins\midi-fadester\` (optionally paired with **Fadester for OBS** on Stream Deck +):
-  - In **`Visual Sidechain: Shader Filter -> Fader Control (Midi & Stream Deck Fadester)`**, bind any slot (`Crossfader`, `Fader 1..8`, `Master`) to **`Effect Mix Fader (Dry / Wet)`**, **`Audio Reactivity Fader`**, or **`Parameter Fader 1 / 2`** (e.g. `Aura Intensity`, `Prism Dispersion`, or `Spectrum Bar Height`) and move your physical MIDI fader or Stream Deck + dial.
-  - In **`Visual Sidechain: Audio Modulator`**, pick **`Depth Fader (Midi / Stream Deck Fadester)`** on an audio-driven slot to scale `Modulation Amount` live from `0–100%` without losing beat reactivity (or pick `Fader: 1..8` directly as `Driving Audio Signal`).
-- **`obs-websocket` 5 Vendor API:** Query `CallVendorRequest` (`vendorName: "visual-sidechain"`, `requestType: "get_signals"`) or subscribe to `VendorEvent` (`eventType: "signals_changed"`, capped at 30 Hz) from Streamer.bot, TouchDesigner, or an `obs-websocket` script.
+  - In **`Visual Sidechain: Shader Filter -> Fader Control (Midi & Stream Deck Fadester)`**, bind any slot (`Crossfader`, `Fader 1..8`, `Master`, `FX 1..8`) to **`Effect Mix Fader (Dry / Wet)`**, **`Audio Reactivity Fader`**, or **`Parameter Fader 1 Target`** / **`Parameter Fader 2 Target`** (e.g. `Aura Intensity`, `Radial Prism Dispersion`, or `Spectrum Bar Height`) and move your physical MIDI fader or Stream Deck + dial.
+  - In **`Visual Sidechain: Audio Modulator`**, pick **`Depth Fader (Midi / Stream Deck Fadester)`** on an audio-driven slot to scale `Modulation Amount` live from `0–100%` without losing beat reactivity (or pick a fader such as `Fader: Fader 1` or `FX & Knobs: FX 1` directly as **`Driving Audio Signal`**).
+- **Tape Deck:** Add a new **Browser Source** just for the deck (the deck replaces its address and some of its settings, and its window says so), then add the filter **`Visual Sidechain: Tape Deck`** to it. Choose a video file under **`Tape (video file)`**: the status line reads **`Loading the tape.`** until you press **`Refresh Status`**, and then **`Playing.`** with the speed and position. Move **`Speed`** between 25 % and 800 % and toggle **`Tape pitch (sound follows speed)`**. Check that Panic leaves the deck playing.
+- **`obs-websocket` 5 Vendor API:** Query `CallVendorRequest` (`vendorName: "visual-sidechain"`, `requestType: "get_signals"` or `"get_decks"`) or subscribe to `VendorEvent` (`eventType: "signals_changed"`, capped at 30 Hz) from Streamer.bot, TouchDesigner, or an `obs-websocket` script.
 
 ---
 

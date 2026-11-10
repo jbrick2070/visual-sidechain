@@ -1,14 +1,18 @@
 # Visual Sidechain
 
-The coordinated development version is **0.6.0**, shared with Midi Fadester and Fadester for OBS. Install and update each plugin separately; this source version does not create a release tag or replace the operator's hardware/GPU acceptance.
-
-**Visual Sidechain** is an FFT-reactive GPU shader filter suite and sibling-filter Audio Modulator for OBS Studio 33 on Windows x64 (NVIDIA RTX first). By default it taps **Track 1 (the main mix)** (or any individual OBS audio source / mixer track), runs a real-time dual-resolution Hann-windowed FFT (**4096-point** for high-resolution sub-bass and kick detection $\le 250\text{ Hz}$ paired with **2048-point** for low-latency mids and highs), uploads a `512x2` GPU FFT + waveform texture (`audio_fft`) and a `32x1` logarithmic spectrum texture (`audio_spectrum`), and drives 11 original `GPL-2.0-or-later` FFT-reactive shaders (**FFT Spectral Edge / Border Aura**, **FFT Wave Warp & Glitch**, **FFT Chromatic Prism & Bloom**, **FFT Visualizer Overlays**, **FFT Zoom Pulse & Barrel Lens**, **FFT Kaleidoscope**, **FFT Feedback Trails**, **FFT Strobe & Flash**, **FFT Mirror & Split**, **FFT Hex Pulse Lattice**, and **FFT Polygon Tunnel**) plus the **Audio Modulator** filter for sidechaining sibling filters—including OBS 33's built-in **NVIDIA Blur**, **NVIDIA Background Blur**, and **NVIDIA Background Removal**. All audio and beat signals are also available over the `obs-websocket` 5 vendor API (`vendor_name = "visual-sidechain"`), and all 18 Fadester slots (`crossfader`, `fader_1`..`fader_8`, `master`, `fx_1`..`fx_8`) can act as modulation sources in the Audio Modulator and as float uniforms (`fader_crossfader`, `fader_1`..`fader_8`, `fader_master`, `fader_fx_1`..`fader_fx_8`) in shaders.
-
-It also has a **[Tape Deck](#tape-deck)**: a filter that turns a Browser Source into a tape deck for a local video file, with speed from 25 % to 800 % that changes in place, transport, hotkeys and Fadester control.
+**Visual Sidechain** makes your video move with your music in OBS Studio 33 on Windows. Its effects react to the sound as it plays, its Audio Modulator moves the settings of your other filters to the beat, and its **[Tape Deck](#tape-deck)** plays a video file at any speed from 25 % to 800 %.
 
 ![Visual Sidechain in OBS Studio 33: the Program scene "Visual Sidechain" shows the FFT Hex Pulse Lattice shader reacting to the soundtrack, with Studio Mode previewing a layer mix. A frame of a real OBS window capture.](docs/images/visual-sidechain-hero.png)
 
 > **Disclaimer:** Visual Sidechain is an independent third-party plugin for OBS Studio. It is not made, endorsed, or supported by the OBS Project or NVIDIA Corporation.
+
+## First five minutes
+
+1. [Install the plugin](#installation-obs-studio-3300-on-windows-x64) and start OBS Studio 33.
+2. Right-click a source or a scene, choose **Filters**, press **`+`** under **Effect Filters**, and add **`Visual Sidechain: Shader Filter`**.
+3. Play music. The picture moves with the sound on **Track 1 (Main Mix)**. The line at the top of the filter's window says which track it listens to. If nothing moves, check that your music goes to that track: **Audio Mixer**, **Advanced Audio Properties**, **Tracks**.
+4. Choose another effect under **`Shader Preset / Mode`**.
+5. Open **Settings**, then **Hotkeys**, and set a key for **`Visual Sidechain: Panic (all effects off)`** and one for **`Visual Sidechain: Restore (effects on again)`**. Panic turns off every Visual Sidechain effect in every scene at once.
 
 ## Installation (OBS Studio 33.0.0+ on Windows x64)
 
@@ -18,15 +22,24 @@ Download the latest release from [GitHub Releases](https://github.com/jbrick2070
 - **Portable OBS 33 Install (`*-Portable.zip`):** Extract `plugins\visual-sidechain\` directly into the root of your portable OBS Studio 33 folder.
 - **Unsigned Binary Note (Windows SmartScreen / Smart App Control):** Release binaries are not Authenticode code-signed. If Windows SmartScreen prompts on the `.exe` installer, click **More info -> Run anyway** (or if unloading a downloaded `.zip`, right-click the `.zip` -> **Properties -> Unblock** before extracting). Systems running Windows 11 **Smart App Control** in strict enforcement mode block unsigned third-party DLLs by OS policy.
 
-## Quick Start & Photosensitivity Safety Hotkeys
+## Photosensitivity safety: Panic, Restore and the flash limit
 
-1. Right-click any video source or scene in OBS -> **Filters** -> **Effect Filters (`+`)**:
-   - Add **`Visual Sidechain: Shader Filter`** to apply any of the 11 built-in FFT-reactive GPU shaders or load your own `.shader` / `.effect` file. **`Effect Mix (Dry / Wet)`** and **`Audio Reactivity`** sliders sit under the preset and work without any MIDI hardware; the audio analysis group sits at the bottom of the panel with its advanced tuning hidden behind **`Show Advanced Analysis Settings`**. Under **`Fader Control (Midi & Stream Deck Fadester)`**, you can bind any Fadester slot (`Crossfader`, `Fader 1..8`, `Master`, `FX 1..8`) to **`Effect Mix Fader (Dry / Wet)`**, **`Audio Reactivity Fader`**, or up to two direct **`Parameter Fader`** targets (auto-seeded to the parameter's range and clamped to safety ceilings).
-   - Add **`Visual Sidechain: Audio Modulator`** alongside any sibling filter (such as **Color Correction**, **NVIDIA Background Removal**, or **NVIDIA Blur**) to drive numeric settings from `Kick Onset`, `Bass`, `Beat Phase`, any `Spectrum Band 1..32`, a `Custom Hz Window`, or a `Midi Fadester` fader slot—and optionally assign a **`Depth Fader`** per slot to scale `Modulation Amount` live from `0–100%` from a MIDI fader or Stream Deck + dial. Target `Minimum` / `Maximum` bounds are auto-seeded when you pick a target setting, and original baselines are automatically restored on disable, removal, or scene save.
-2. **Photosensitivity & Panic Hotkeys (`Settings -> Hotkeys`):**
-   - **`Visual Sidechain: Panic`** immediately puts every `Visual Sidechain: Shader Filter` (including custom user shaders) into pass-through and zeroes all strobe, flash, and modulation amounts across OBS.
-   - **`Visual Sidechain: Restore`** exits pass-through and restores pre-panic amounts.
-   - **`FFT Strobe & Flash`** allows at most **3 flashes per second** per filter. **`Maximum Flash Rate (Hz)`** is adjustable from 0.5 to 3 (default 3), and Visual Sidechain itself skips any trigger that comes faster, whatever the audio. Your footage, several strobe filters at once and other effects can still add flashes, so check the final output before you stream, record or project it, and bind **`Visual Sidechain: Panic`** for an instant stop.
+Both hotkeys are in **Settings**, **Hotkeys**, and have no key until you set one. A line in the Shader Filter's window says where to set them.
+
+- **`Visual Sidechain: Panic (all effects off)`** at once puts every `Visual Sidechain: Shader Filter` (custom shaders too) into pass-through and sets every strobe, flash and modulation amount to zero, in every scene. While Panic is on, the top of each Shader Filter and Audio Modulator window says so.
+- **`Visual Sidechain: Restore (effects on again)`** ends the pass-through and puts the amounts back as they were before Panic.
+- **`FFT Strobe & Flash`** allows at most **3 flashes per second** per filter, and its window says so under **`Maximum Flash Rate (Hz)`**. You can lower that rate to 0.5 (the default is 3). Visual Sidechain skips any trigger that comes faster, whatever the audio. Your footage, several strobe filters at once and other effects can still add flashes, so check the final output before you stream, record or project it, and keep a key on Panic for an instant stop.
+
+## Shader Filter and Audio Modulator
+
+- **`Visual Sidechain: Shader Filter`** applies one of the 11 built-in effects or your own `.shader` / `.effect` file. The **`Effect Mix (Dry / Wet)`** and **`Audio Reactivity`** sliders sit under the preset and need no MIDI hardware. The audio group is at the bottom of the window, with its advanced tuning behind **`Show Advanced Analysis Settings`**. Under **`Fader Control (Midi & Stream Deck Fadester)`** you can bind any Fadester slot (`Crossfader`, `Fader 1..8`, `Master`, `FX 1..8`) to **`Effect Mix Fader (Dry / Wet)`**, **`Audio Reactivity Fader`**, or up to two **`Parameter Fader`** targets (set to the parameter's own range, and held inside its safety limits).
+- **`Visual Sidechain: Audio Modulator`** moves numeric settings of another filter on the same source (such as **Color Correction**, **NVIDIA Background Removal** or **NVIDIA Blur**). Add that filter first: the modulator lists only filters on its own source. Each slot follows `Kick Onset`, `Bass`, `Beat Phase`, any `Spectrum Band 1..32`, a `Custom Hz Window`, or a Midi Fadester fader slot, and a **`Depth Fader`** per slot can scale `Modulation Amount` live from `0–100%` from a MIDI fader or a Stream Deck + dial. The minimum and maximum are filled in from the setting's own range when you pick it. When you turn the modulator off or remove it, and when OBS saves the scene collection, each setting goes back to its own value.
+
+## How it works
+
+The coordinated development version is **0.6.0**, shared with Midi Fadester and Fadester for OBS. Install and update each plugin separately; this source version does not create a release tag or replace the operator's hardware/GPU acceptance.
+
+Visual Sidechain is an FFT-reactive GPU shader filter suite and sibling-filter Audio Modulator for OBS Studio 33 on Windows x64 (NVIDIA RTX first). By default it taps **Track 1 (the main mix)** (or any individual OBS audio source / mixer track), runs a real-time dual-resolution Hann-windowed FFT (**4096-point** for high-resolution sub-bass and kick detection $\le 250\text{ Hz}$ paired with **2048-point** for low-latency mids and highs), uploads a `512x2` GPU FFT + waveform texture (`audio_fft`) and a `32x1` logarithmic spectrum texture (`audio_spectrum`), and drives 11 original `GPL-2.0-or-later` FFT-reactive shaders (**FFT Spectral Edge / Border Aura**, **FFT Wave Warp & Glitch**, **FFT Chromatic Prism & Bloom**, **FFT Visualizer Overlays**, **FFT Zoom Pulse & Barrel Lens**, **FFT Kaleidoscope**, **FFT Feedback Trails**, **FFT Strobe & Flash**, **FFT Mirror & Split**, **FFT Hex Pulse Lattice**, and **FFT Polygon Tunnel**) plus the **Audio Modulator** filter for sidechaining sibling filters—including OBS 33's built-in **NVIDIA Blur**, **NVIDIA Background Blur**, and **NVIDIA Background Removal**. All audio and beat signals are also available over the `obs-websocket` 5 vendor API (`vendor_name = "visual-sidechain"`), and all 18 Fadester slots (`crossfader`, `fader_1`..`fader_8`, `master`, `fx_1`..`fx_8`) can act as modulation sources in the Audio Modulator and as float uniforms (`fader_crossfader`, `fader_1`..`fader_8`, `fader_master`, `fader_fx_1`..`fader_fx_8`) in shaders.
 
 ## Geometric presets and fader assignments
 
@@ -44,12 +57,12 @@ Custom shader parameters can use `effect_mix` and `audio_reactivity` independent
 
 **First five minutes**
 
-1. Add a **Browser Source** to a scene. Its address does not matter: the deck sets the source up for itself (the deck page as its address, **Control audio via OBS** on, **Shutdown source when not visible** and **Refresh browser when scene becomes active** off).
+1. Add a new **Browser Source** to a scene, just for the deck. Its address does not matter: the deck sets the source up for itself (the deck page as its address, **Control audio via OBS** on, **Shutdown source when not visible** and **Refresh browser when scene becomes active** off). It does not put the old settings back when you remove the filter, so do not use a Browser Source that shows something else, such as an alert page or a chat. The filter's window says this too.
 2. Right-click the Browser Source -> **Filters** -> **Effect Filters (`+`)** -> **`Visual Sidechain: Tape Deck`**.
 3. Choose a video file under **Tape**. It plays at once, looping.
 4. Move **Speed**. With **Tape pitch** ticked the sound drops and rises with the speed, like a tape; unticked, the pitch stays put.
 
-The line at the top of the filter's Properties says what the deck's page last reported, for example "Playing. Speed 150%, at 0:42 of 2:02." It is a snapshot: press **Refresh Status** to read it again. Properties never refreshes itself, so it never takes the focus from what you are editing. The deck's sound reaches OBS's mixer through the Browser Source.
+The status line near the top of the filter's window says what the deck's page last reported, for example "Playing. Speed 150%, at 0:42 of 2:02." It is a snapshot: press **Refresh Status** to read it again. Right after you choose a tape, the window redraws once and the line reads "Loading the tape. Press Refresh Status to see the result." The window never refreshes on a timer, only right after something you do in it, so it never takes the focus while you are editing. If it reads "No answer from the deck page yet", wait a few seconds and press **Refresh Status**. The deck's sound reaches OBS's mixer through the Browser Source.
 
 **Controls**
 
@@ -61,7 +74,7 @@ The line at the top of the filter's Properties says what the deck's page last re
 
 **Two decks, hidden decks.** Each Browser Source holds one deck. A second Tape Deck on the same source waits and says so, and takes over if the first is removed (with whatever hotkey bindings the source last saved). A deck whose source is hidden keeps its tape loaded and playing, without sound. Visual Sidechain's Panic and Restore leave decks alone.
 
-**What plays.** With picture and seeking: H.264 in MP4, MKV and MOV (also 10-bit and 4:2:2), VP9 in WebM, AV1 in MP4, and HEVC in MP4 where this PC's hardware decodes it. Sound plays from AAC, MP3 and Opus; AC-3 gives picture without sound. MPEG-2, MJPEG and DXV files give "Cannot play this file", and MPEG-4 Part 2, Theora and ProRes play sound only ("No picture in this file"). Convert those with FFmpeg, for example:
+**What plays.** With picture and seeking: H.264 in MP4, MKV and MOV (also 10-bit and 4:2:2), VP9 in WebM, AV1 in MP4, and HEVC in MP4 where this PC's hardware decodes it. Sound plays from AAC, MP3 and Opus; AC-3 gives picture without sound. MPEG-2, MJPEG and DXV files give "Cannot play this file", and MPEG-4 Part 2, Theora and ProRes play sound only ("This file plays sound only"). A missing file also gives "Cannot play this file". Convert the others to MP4 (H.264 video, AAC sound) with FFmpeg, for example:
 
 ```bash
 ffmpeg -i input.mov -c:v libx264 -crf 18 -preset slow -pix_fmt yuv420p -c:a aac -b:a 192k -movflags +faststart output.mp4
@@ -88,7 +101,7 @@ Midi's **Clean / All FX Off** resets enabled `filter_param` bindings in either b
 
 ## Languages
 
-Visual Sidechain follows the language OBS runs in (Settings > General > Language; OBS needs a restart to change it). Besides English it speaks Simplified Chinese, Spanish, Brazilian Portuguese, Russian, Japanese, German, French, Korean, Traditional Chinese, Turkish and Dutch. A few strings start from OBS's own translation; the rest was drafted by an AI model (Claude), and every file was reviewed by a second one (Gemini), whose corrections were taken. No native speaker has checked them yet. If something reads wrong in your language, please open an issue or a pull request: the files are in `data/locale/`, one per language, and `en-US.ini` is the English source. Shader parameter names come from the shader files and stay as written there; log lines stay English.
+Visual Sidechain follows the language OBS runs in (Settings > General > Language; OBS needs a restart to change it). Besides English it speaks Simplified Chinese, Spanish, Brazilian Portuguese, Russian, Japanese, German, French, Korean, Traditional Chinese, Turkish and Dutch. A few strings start from OBS's own translation; the rest was drafted by an AI model (Claude), and every file was reviewed by a second one (Gemini), whose corrections were taken. No native speaker has checked them yet. If something reads wrong in your language, please open an issue or a pull request: the files are in `data/locale/`, one per language, and `en-US.ini` is the English source. The built-in effects' parameter names and tooltips are translated too (the `ShaderParam.*` lines); a custom shader's own names stay as written in its file. Log lines stay English.
 
 ## Development & AI Disclosure
 
