@@ -33,36 +33,53 @@ OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 static obs_hotkey_id g_panic_hotkey_id = OBS_INVALID_HOTKEY_ID;
 static obs_hotkey_id g_restore_hotkey_id = OBS_INVALID_HOTKEY_ID;
 
-static bool enum_panic_sources_cb(void *param, obs_source_t *source)
+/* The walk only collects weak references while obs_enum_all_sources holds the sources lock; the filters are acted
+ * on after it has returned. Acting inside it would take each filter's own mutex and the graphics lock under the
+ * sources lock, and libobs can take those in the other order (a source destroyed while rendering takes the sources
+ * lock inside the graphics lock). */
+struct vs_filter_walk {
+	obs_weak_source_t **items;
+	size_t num;
+	size_t cap;
+};
+
+static bool collect_vs_filters_cb(void *param, obs_source_t *source)
 {
-	UNUSED_PARAMETER(param);
-	if (!source)
+	struct vs_filter_walk *walk = param;
+	const char *id = source ? obs_source_get_unversioned_id(source) : NULL;
+	if (!id ||
+	    (strcmp(id, "visual_sidechain_shader_filter") != 0 && strcmp(id, "visual_sidechain_modulator_filter") != 0))
 		return true;
-	const char *id = obs_source_get_unversioned_id(source);
-	if (!id)
-		return true;
-	if (strcmp(id, "visual_sidechain_shader_filter") == 0) {
-		vs_shader_filter_apply_panic(source);
-	} else if (strcmp(id, "visual_sidechain_modulator_filter") == 0) {
-		vs_modulator_filter_apply_panic(source);
+	if (walk->num == walk->cap) {
+		walk->cap = walk->cap ? walk->cap * 2 : 16;
+		walk->items = brealloc(walk->items, walk->cap * sizeof(*walk->items));
 	}
+	walk->items[walk->num++] = obs_source_get_weak_source(source);
 	return true;
 }
 
-static bool enum_restore_sources_cb(void *param, obs_source_t *source)
+static void walk_vs_filters(bool panic)
 {
-	UNUSED_PARAMETER(param);
-	if (!source)
-		return true;
-	const char *id = obs_source_get_unversioned_id(source);
-	if (!id)
-		return true;
-	if (strcmp(id, "visual_sidechain_shader_filter") == 0) {
-		vs_shader_filter_apply_restore(source);
-	} else if (strcmp(id, "visual_sidechain_modulator_filter") == 0) {
-		vs_modulator_filter_apply_restore(source);
+	struct vs_filter_walk walk = {0};
+	obs_enum_all_sources(collect_vs_filters_cb, &walk);
+	for (size_t i = 0; i < walk.num; i++) {
+		obs_source_t *source = obs_weak_source_get_source(walk.items[i]);
+		obs_weak_source_release(walk.items[i]);
+		if (!source)
+			continue;
+		const char *id = obs_source_get_unversioned_id(source);
+		const bool shader = id && strcmp(id, "visual_sidechain_shader_filter") == 0;
+		if (panic && shader)
+			vs_shader_filter_apply_panic(source);
+		else if (panic)
+			vs_modulator_filter_apply_panic(source);
+		else if (shader)
+			vs_shader_filter_apply_restore(source);
+		else
+			vs_modulator_filter_apply_restore(source);
+		obs_source_release(source);
 	}
-	return true;
+	bfree(walk.items);
 }
 
 /* Lock order. libobs calls the hotkey callbacks below with its hotkey lock held (obs->hotkeys.mutex), and
@@ -80,7 +97,7 @@ static void panic_walk_task(void *param)
 	/* A Restore since this task was queued wins: the walk always ends matching the flag. */
 	if (!vs_fader_bridge_is_panic_active())
 		return;
-	obs_enum_all_sources(enum_panic_sources_cb, NULL);
+	walk_vs_filters(true);
 	obs_log(LOG_INFO,
 		"Panic hotkey triggered: shader filters set to pass-through and all strobe, flash, and modulation amounts zeroed");
 }
@@ -91,7 +108,7 @@ static void restore_walk_task(void *param)
 	/* A Panic since this task was queued wins: the walk always ends matching the flag. */
 	if (vs_fader_bridge_is_panic_active())
 		return;
-	obs_enum_all_sources(enum_restore_sources_cb, NULL);
+	walk_vs_filters(false);
 	obs_log(LOG_INFO,
 		"Restore hotkey triggered: shader filters restored from pass-through and pre-panic amounts restored");
 }
