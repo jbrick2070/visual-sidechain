@@ -49,6 +49,8 @@ target_sources(
     src/core/envelope.c
     src/core/flash-clock.h
     src/core/flash-clock.c
+    src/core/tempo.h
+    src/core/tempo.c
     src/core/onset.h
     src/core/onset.c
     src/core/analyzer.h
