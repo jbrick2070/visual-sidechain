@@ -6,6 +6,8 @@ All notable changes to Visual Sidechain are listed here, newest first. The forma
 
 ### Added
 
+- **Suite Start Here link (`P1-5`):** Linked the suite-wide `START-HERE.md` setup and compatibility guide first at the top of `README.md`.
+
 - **Tape Deck vendor control and events (`P1-6`):** Added `visual-sidechain` obs-websocket vendor request `deck_command { deck, op, percent?, steps? }` (`play_pause`, `cue_to_start`, `speed_set`, `speed_step`, `normal_speed`) reusing the `tubester_deck.*` hotkey paths with plain-sentence validation and per-frame `speed_set` coalescing, vendor event `decks_changed` (same payload as `get_decks`, coalesced to at most 30 events/sec without firing on ordinary playback position advances), additive `version` field on `get_decks`, and the `"Which video player when"` guide in `README.md` (`api_version` stays `1`; Tape Decks stay outside Panic and Restore).
 
 - **Tempo foundation (`P1-2`):** Added `src/core/tempo.{h,c}`, `visual-sidechain` obs-websocket vendor requests `tap_tempo`, `set_bpm { bpm }`, `lock_bpm { locked }`, and `resync_downbeat`, OBS frontend hotkeys `visual_sidechain_tap_tempo`, `visual_sidechain_lock_bpm`, and `visual_sidechain_resync_downbeat` across all 12 locales, and 4-beat bar signals `beat_index` (`0..3`), `bar_phase` (`0.0..1.0`), `bar_index` (`>= 0`), and `bpm_locked` (`bool`, default `false`) on `get_signals`, `signals_changed`, `visual_sidechain_get_signals`, and `visual_sidechain_signals` (`api_version` stays `1`). When `bpm_locked` is on, kicks never alter tempo (only gently nudging phase near a beat boundary) and the bar clock keeps running continuously across kickless gaps and silence.
