@@ -93,24 +93,33 @@ static void walk_vs_filters(bool panic)
  * it runs in place, on the save's own thread, so a walk and a save never overlap. */
 static void panic_walk_task(void *param)
 {
-	UNUSED_PARAMETER(param);
+	const bool emit_event = param != NULL;
 	/* A Restore since this task was queued wins: the walk always ends matching the flag. */
-	if (!vs_fader_bridge_is_panic_active())
-		return;
-	walk_vs_filters(true);
-	obs_log(LOG_INFO,
-		"Panic hotkey triggered: shader filters set to pass-through and all strobe, flash, and modulation amounts zeroed");
+	if (vs_fader_bridge_is_panic_active()) {
+		walk_vs_filters(true);
+		obs_log(LOG_INFO,
+			"Panic triggered: shader filters set to pass-through and all strobe, flash, and modulation amounts zeroed");
+	}
+	if (emit_event)
+		vs_vendor_api_emit_safety_changed();
 }
 
 static void restore_walk_task(void *param)
 {
-	UNUSED_PARAMETER(param);
+	const bool emit_event = param != NULL;
 	/* A Panic since this task was queued wins: the walk always ends matching the flag. */
-	if (vs_fader_bridge_is_panic_active())
-		return;
-	walk_vs_filters(false);
-	obs_log(LOG_INFO,
-		"Restore hotkey triggered: shader filters restored from pass-through and pre-panic amounts restored");
+	if (!vs_fader_bridge_is_panic_active()) {
+		walk_vs_filters(false);
+		obs_log(LOG_INFO,
+			"Restore triggered: shader filters restored from pass-through and pre-panic amounts restored");
+	}
+	if (emit_event)
+		vs_vendor_api_emit_safety_changed();
+}
+
+static void schedule_safety_walk(bool panic)
+{
+	obs_queue_task(OBS_TASK_UI, panic ? panic_walk_task : restore_walk_task, NULL, false);
 }
 
 static void on_panic_hotkey(void *data, obs_hotkey_id id, obs_hotkey_t *hotkey, bool pressed)
@@ -121,7 +130,7 @@ static void on_panic_hotkey(void *data, obs_hotkey_id id, obs_hotkey_t *hotkey, 
 	if (!pressed)
 		return;
 	vs_fader_bridge_trigger_panic();
-	obs_queue_task(OBS_TASK_UI, panic_walk_task, NULL, false);
+	obs_queue_task(OBS_TASK_UI, panic_walk_task, (void *)(uintptr_t)1, false);
 }
 
 static void on_restore_hotkey(void *data, obs_hotkey_id id, obs_hotkey_t *hotkey, bool pressed)
@@ -132,7 +141,7 @@ static void on_restore_hotkey(void *data, obs_hotkey_id id, obs_hotkey_t *hotkey
 	if (!pressed)
 		return;
 	vs_fader_bridge_trigger_restore();
-	obs_queue_task(OBS_TASK_UI, restore_walk_task, NULL, false);
+	obs_queue_task(OBS_TASK_UI, restore_walk_task, (void *)(uintptr_t)1, false);
 }
 
 /* Shown by the OBS 33 Plugin Manager when data/manifest.json gives no display name. Keep both strings in sync
@@ -149,6 +158,7 @@ const char *obs_module_description(void)
 
 bool obs_module_load(void)
 {
+	vs_vendor_api_set_safety_walk_scheduler(schedule_safety_walk);
 	vs_register_modulator_filter();
 	vs_register_shader_filter();
 	tub_register_deck_filter();
@@ -175,6 +185,7 @@ void obs_module_unload(void)
 		obs_hotkey_unregister(g_restore_hotkey_id);
 		g_restore_hotkey_id = OBS_INVALID_HOTKEY_ID;
 	}
+	vs_vendor_api_reset();
 	vs_fader_bridge_detach();
 	/* Closes the report socket and joins its thread. Decks are usually gone by now (the frontend clears its scenes
 	 * first), but libobs unloads modules before it destroys any source still alive, so a deck may be destroyed
