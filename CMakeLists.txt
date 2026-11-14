@@ -47,6 +47,8 @@ target_sources(
     src/core/spectrum.c
     src/core/envelope.h
     src/core/envelope.c
+    src/core/flash-clock.h
+    src/core/flash-clock.c
     src/core/onset.h
     src/core/onset.c
     src/core/analyzer.h
