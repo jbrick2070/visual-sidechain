@@ -1,5 +1,7 @@
 # Visual Sidechain
 
+> **Setting up the Fadester Suite?** Start with **[START-HERE.md](https://github.com/jbrick2070/streamdeck-fadester/blob/main/docs/START-HERE.md)** for what to install for your controller, which video player to pick, first-run OBS settings, and the compatibility matrix.
+
 **Visual Sidechain** makes your video move with your music in OBS Studio 33 on Windows. Its effects react to the sound as it plays, its Audio Modulator moves the settings of your other filters to the beat, and its **[Tape Deck](#tape-deck)** plays a video file at any speed from 25% to 800% (0.25x to 8x).
 
 ![Visual Sidechain in OBS Studio 33: the Program scene "Visual Sidechain" shows the FFT Hex Pulse Lattice shader reacting to the soundtrack, with Studio Mode previewing a layer mix. A frame of a real OBS window capture.](docs/images/visual-sidechain-hero.png)
