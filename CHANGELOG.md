@@ -6,6 +6,7 @@ All notable changes to Visual Sidechain are listed here, newest first. The forma
 
 ### Added
 
+- **Panic truth channel (`P0-3`):** Added `visual-sidechain` obs-websocket vendor requests `get_safety`, `panic`, and `restore`, vendor event `safety_changed` (`{ version, api_version: 1, panic, since_ms }`), and additive `panic` boolean on `get_signals` / `signals_changed`. Both vendor requests and OBS frontend hotkeys (`visual_sidechain_panic` / `visual_sidechain_restore`) emit `safety_changed` and share the UI-thread filter walk (`api_version` stays `1`).
 - `audio_present` (`bool`) and `beat_confidence` (`0.0..1.0`) fields on the `visual-sidechain` vendor API (`get_signals`, `signals_changed`) and in-process `visual_sidechain_get_signals` / `visual_sidechain_signals` bridge (`api_version` stays `1`).
 - Live snapshot Audio Input Status line (`"Hearing audio on ..."` / `"No audio on ... for N s."`) with an explicit **Refresh Audio Status** button in Shader Filter and Audio Modulator Properties across all 12 locales.
 
