@@ -18,6 +18,8 @@ All notable changes to Visual Sidechain are listed here, newest first. The forma
 
 ### Changed
 
+- **Suite naming pass (`P1-7`):** Replaced legacy *Stream Deck Fadester* and bare *Fadester* product labels with *Fadester for OBS* and *Midi Fadester* across all 12 locale files (`data/locale/*.ini`), qualified *Restore* as *Restore visuals* (`Hotkey.Restore`, `Panic.Active`, `Shader.PanicHint`), and standardized *Cue to start* (`Tubester.CueToStart`, `Tubester.Hotkey.CueToStart`) in `en-US.ini` without changing any hotkey ID, setting key, or vendor request name.
+
 - **Shared process-wide flash clock (`P0-1`):** Moved flash-rate limiting into a process-wide shared clock (`src/core/flash-clock.{h,c}`) capped at 3 flashes per second across all active Visual Sidechain filters and guarded Audio Modulator slots combined (admitted in arrival order; per-shader `max_flash_rate_hz` can only lower that filter's personal rate).
 - **Limited transient uniforms and modulator sources (`P0-1`):** Added `audio_kick_safe`, `audio_snare_safe`, `audio_flux_safe`, and `audio_spectral_flux_safe` shader uniforms plus matching Audio Modulator signal sources (`Kick Onset (Flash-Safe)`, `Snare Onset (Flash-Safe)`, `Wideband Spectral Flux (Flash-Safe)`).
 - **Built-in shader flash audit (`P0-1`):** Routed whole-frame luminance, highlight bloom, border/silhouette aura, trail persistence, and edge vignette transients across the 11 built-in shaders onto `vs_flash_envelope` / `audio_kick_safe` while keeping spatial UV geometry on raw transients, enforced by `check-shader-flash-safety`.
