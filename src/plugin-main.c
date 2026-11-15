@@ -19,8 +19,10 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <obs-module.h>
 #include <plugin-support.h>
+#include <util/platform.h>
 #include <string.h>
 
+#include "core/tempo.h"
 #include "obs/modulator-filter.h"
 #include "obs/shader-filter.h"
 #include "obs/vendor-api.h"
@@ -32,6 +34,9 @@ OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 
 static obs_hotkey_id g_panic_hotkey_id = OBS_INVALID_HOTKEY_ID;
 static obs_hotkey_id g_restore_hotkey_id = OBS_INVALID_HOTKEY_ID;
+static obs_hotkey_id g_tap_tempo_hotkey_id = OBS_INVALID_HOTKEY_ID;
+static obs_hotkey_id g_lock_bpm_hotkey_id = OBS_INVALID_HOTKEY_ID;
+static obs_hotkey_id g_resync_downbeat_hotkey_id = OBS_INVALID_HOTKEY_ID;
 
 /* The walk only collects weak references while obs_enum_all_sources holds the sources lock; the filters are acted
  * on after it has returned. Acting inside it would take each filter's own mutex and the graphics lock under the
@@ -144,6 +149,51 @@ static void on_restore_hotkey(void *data, obs_hotkey_id id, obs_hotkey_t *hotkey
 	obs_queue_task(OBS_TASK_UI, restore_walk_task, (void *)(uintptr_t)1, false);
 }
 
+static void tempo_emit_task(void *param)
+{
+	UNUSED_PARAMETER(param);
+	struct vs_tempo_snapshot snap;
+	vs_tempo_global_get_snapshot(&snap);
+	vs_fader_bridge_apply_tempo_snapshot(&snap);
+	vs_vendor_api_emit_signals_changed();
+}
+
+static void on_tap_tempo_hotkey(void *data, obs_hotkey_id id, obs_hotkey_t *hotkey, bool pressed)
+{
+	UNUSED_PARAMETER(data);
+	UNUSED_PARAMETER(id);
+	UNUSED_PARAMETER(hotkey);
+	if (!pressed)
+		return;
+	struct vs_tempo_snapshot snap;
+	if (vs_tempo_global_tap((double)os_gettime_ns() * 1e-9, &snap))
+		obs_queue_task(OBS_TASK_UI, tempo_emit_task, NULL, false);
+}
+
+static void on_lock_bpm_hotkey(void *data, obs_hotkey_id id, obs_hotkey_t *hotkey, bool pressed)
+{
+	UNUSED_PARAMETER(data);
+	UNUSED_PARAMETER(id);
+	UNUSED_PARAMETER(hotkey);
+	if (!pressed)
+		return;
+	struct vs_tempo_snapshot snap;
+	vs_tempo_global_toggle_locked(&snap);
+	obs_queue_task(OBS_TASK_UI, tempo_emit_task, NULL, false);
+}
+
+static void on_resync_downbeat_hotkey(void *data, obs_hotkey_id id, obs_hotkey_t *hotkey, bool pressed)
+{
+	UNUSED_PARAMETER(data);
+	UNUSED_PARAMETER(id);
+	UNUSED_PARAMETER(hotkey);
+	if (!pressed)
+		return;
+	struct vs_tempo_snapshot snap;
+	vs_tempo_global_resync_downbeat(&snap);
+	obs_queue_task(OBS_TASK_UI, tempo_emit_task, NULL, false);
+}
+
 /* Shown by the OBS 33 Plugin Manager when data/manifest.json gives no display name. Keep both strings in sync
  * with buildspec.json (displayName) and cmake/common/manifest.json.in (description). */
 const char *obs_module_name(void)
@@ -166,6 +216,13 @@ bool obs_module_load(void)
 							 on_panic_hotkey, NULL);
 	g_restore_hotkey_id = obs_hotkey_register_frontend("visual_sidechain_restore",
 							   obs_module_text("Hotkey.Restore"), on_restore_hotkey, NULL);
+	g_tap_tempo_hotkey_id = obs_hotkey_register_frontend(
+		"visual_sidechain_tap_tempo", obs_module_text("Hotkey.TapTempo"), on_tap_tempo_hotkey, NULL);
+	g_lock_bpm_hotkey_id = obs_hotkey_register_frontend(
+		"visual_sidechain_lock_bpm", obs_module_text("Hotkey.LockBpm"), on_lock_bpm_hotkey, NULL);
+	g_resync_downbeat_hotkey_id = obs_hotkey_register_frontend("visual_sidechain_resync_downbeat",
+								   obs_module_text("Hotkey.ResyncDownbeat"),
+								   on_resync_downbeat_hotkey, NULL);
 	obs_log(LOG_INFO, "plugin loaded successfully (version %s)", PLUGIN_VERSION);
 	return true;
 }
@@ -184,6 +241,18 @@ void obs_module_unload(void)
 	if (g_restore_hotkey_id != OBS_INVALID_HOTKEY_ID) {
 		obs_hotkey_unregister(g_restore_hotkey_id);
 		g_restore_hotkey_id = OBS_INVALID_HOTKEY_ID;
+	}
+	if (g_tap_tempo_hotkey_id != OBS_INVALID_HOTKEY_ID) {
+		obs_hotkey_unregister(g_tap_tempo_hotkey_id);
+		g_tap_tempo_hotkey_id = OBS_INVALID_HOTKEY_ID;
+	}
+	if (g_lock_bpm_hotkey_id != OBS_INVALID_HOTKEY_ID) {
+		obs_hotkey_unregister(g_lock_bpm_hotkey_id);
+		g_lock_bpm_hotkey_id = OBS_INVALID_HOTKEY_ID;
+	}
+	if (g_resync_downbeat_hotkey_id != OBS_INVALID_HOTKEY_ID) {
+		obs_hotkey_unregister(g_resync_downbeat_hotkey_id);
+		g_resync_downbeat_hotkey_id = OBS_INVALID_HOTKEY_ID;
 	}
 	vs_vendor_api_reset();
 	vs_fader_bridge_detach();
