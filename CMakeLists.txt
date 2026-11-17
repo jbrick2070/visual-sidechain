@@ -90,12 +90,16 @@ target_sources(
     src/tubester/random.c
     src/tubester/listener.h
     src/tubester/listener.c
+    src/tubester/socket-compat.h
     src/tubester/deck-filter.h
     src/tubester/deck-filter.c
 )
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE src)
-# Tubester's report listener (Winsock) and token source (BCrypt); the plugin is Windows-only (R-PLAT-9)
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE ws2_32 bcrypt)
+# Tubester's report listener and token source: Winsock and BCrypt on Windows; POSIX sockets and arc4random_buf on
+# macOS come with the system library (R-PLAT-9)
+if(OS_WINDOWS)
+  target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE ws2_32 bcrypt)
+endif()
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})
 
