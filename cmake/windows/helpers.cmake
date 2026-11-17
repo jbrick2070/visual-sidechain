@@ -50,6 +50,7 @@ function(set_target_properties_plugin target)
 
   target_install_resources(${target})
 
+  set(PLUGIN_OS_ARCH windows-x64)
   configure_file(cmake/common/manifest.json.in "${CMAKE_CURRENT_BINARY_DIR}/manifest.json" @ONLY)
   target_add_resource(${target} "${CMAKE_CURRENT_BINARY_DIR}/manifest.json")
 

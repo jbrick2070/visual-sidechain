@@ -51,6 +51,11 @@ function(set_target_properties_plugin target)
 
   target_install_resources(${target})
 
+  # OBS 33 reads manifest.json from the module's data path, Contents/Resources in the bundle (R-PLAT-8)
+  set(PLUGIN_OS_ARCH macos-universal)
+  configure_file(cmake/common/manifest.json.in "${CMAKE_CURRENT_BINARY_DIR}/manifest.json" @ONLY)
+  target_add_resource(${target} "${CMAKE_CURRENT_BINARY_DIR}/manifest.json")
+
   add_custom_command(
     TARGET ${target}
     POST_BUILD
