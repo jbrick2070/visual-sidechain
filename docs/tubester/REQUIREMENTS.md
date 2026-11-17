@@ -121,6 +121,6 @@ Test copy of OBS 33.0.1 on this PC. F-2 and F-4 used a scratch Lua filter standi
 - Whether a warmed deck holds through long hidden periods. Tested for seconds only.
 - A/V sync with the offset applied.
 - Real Internet Archive files.
-- Other PCs, especially without hardware decoding. Linux is out of scope. The Mac build (from the release after 0.7.1) has the deck, its listener and Mac paths, tested in CI; playback in OBS's Browser Source on a real Mac is not checked yet (`TESTING.md` section M).
+- Other PCs, especially without hardware decoding. Linux is out of scope. The Mac build (from 0.7.2) has the deck, its listener and Mac paths, tested in CI; playback in OBS's Browser Source on a real Mac is not checked yet (`TESTING.md` section M).
 - SmartScreen behaviour for the DLL.
 - Reverse.
