@@ -36,7 +36,7 @@ Close OBS Studio, then choose the package from [GitHub Releases](https://github.
 
 **Verify load:** Start OBS Studio 33, open **`Help -> Log Files -> View Current Log`**, and confirm you see (the vendor line appears only when obs-websocket is loaded):
 ```text
-[visual-sidechain] plugin loaded successfully (version 0.6.0)
+[visual-sidechain] plugin loaded successfully (version 0.7.1)
 [visual-sidechain] Registered obs-websocket vendor 'visual-sidechain' (get_signals=1, get_decks=1)
 ```
 

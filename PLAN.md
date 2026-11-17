@@ -1,6 +1,9 @@
 # visual-sidechain -- Plan
 
 Status: 2026-10-28 (`0.5.1` shipped; Phases 1-5 implemented and verified on OBS Studio 33.0.0 + RTX 5080).
+
+Update 2026-11-16: the current release is `0.7.0` (Windows only; see [CHANGELOG.md](CHANGELOG.md)). The status line above is the 2026-10-28 snapshot.
+
 Companion to [REQUIREMENTS.md](REQUIREMENTS.md); requirement IDs (`R-...`) and
 decisions (`D-...`) refer to that file.
 

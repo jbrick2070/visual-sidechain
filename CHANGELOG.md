@@ -4,6 +4,14 @@ All notable changes to Visual Sidechain are listed here, newest first. The forma
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-11-16
+
+### Fixed
+
+- Hotkeys set in Settings > Hotkeys (Panic, Restore, Tap Tempo, Lock BPM, Resync Downbeat) are now loaded at startup and on profile change; before, they stopped working after OBS restarted.
+
+## [0.7.0] - 2026-11-15
+
 ### Added
 
 - **Suite Start Here link (`P1-5`):** Linked the suite-wide `START-HERE.md` setup and compatibility guide first at the top of `README.md`.
@@ -30,3 +38,7 @@ All notable changes to Visual Sidechain are listed here, newest first. The forma
 - Beat phase no longer freewheels in silence: after `2.0 s` below the noise gate or without audio callbacks (and before the first above-gate audio), `beat` (`beat_phase`) freezes at `0.0`, `audio_present` reports `false`, `beat_confidence` reports `0.0`, and `signals_changed` stops emitting until audio resumes.
 - Corrected stale kick (`55..130 Hz`) and snare (`250..4000 Hz`) frequency band comments in `src/core/analyzer.h`.
 - `README.md`: clarify that version `0.6.0` is shared with Midi Fadester while Fadester for OBS is versioned separately (`0.11.0`).
+
+[Unreleased]: https://github.com/jbrick2070/visual-sidechain/compare/0.7.1...HEAD
+[0.7.1]: https://github.com/jbrick2070/visual-sidechain/compare/0.7.0...0.7.1
+[0.7.0]: https://github.com/jbrick2070/visual-sidechain/compare/0.6.0...0.7.0

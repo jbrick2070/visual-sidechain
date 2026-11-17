@@ -18,7 +18,9 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 */
 
 #include <obs-module.h>
+#include <obs-frontend-api.h>
 #include <plugin-support.h>
+#include <util/config-file.h>
 #include <util/platform.h>
 #include <string.h>
 
@@ -194,6 +196,40 @@ static void on_resync_downbeat_hotkey(void *data, obs_hotkey_id id, obs_hotkey_t
 	obs_queue_task(OBS_TASK_UI, tempo_emit_task, NULL, false);
 }
 
+/* Settings > Hotkeys saves every frontend hotkey into the profile's [Hotkeys] section by name, as
+ * {"bindings":[...]}, but OBS reads back only its own frontend hotkeys (OBSBasic::CreateHotkeys). Without this a key
+ * set for Panic worked until OBS restarted, then did nothing. Read ours from the same place, the same way, once the
+ * frontend has loaded and again whenever the profile changes. obs_hotkey_load clears the old bindings first, so a
+ * profile with no entry leaves the hotkey unbound, as OBS does for its own. */
+static void load_frontend_hotkey(config_t *profile, obs_hotkey_id id, const char *name)
+{
+	if (id == OBS_INVALID_HOTKEY_ID)
+		return;
+	const char *json = profile ? config_get_string(profile, "Hotkeys", name) : NULL;
+	obs_data_t *data = (json && *json) ? obs_data_create_from_json(json) : NULL;
+	obs_data_array_t *bindings = data ? obs_data_get_array(data, "bindings") : NULL;
+	obs_hotkey_load(id, bindings);
+	obs_data_array_release(bindings);
+	obs_data_release(data);
+}
+
+static void load_frontend_hotkeys(void)
+{
+	config_t *profile = obs_frontend_get_profile_config();
+	load_frontend_hotkey(profile, g_panic_hotkey_id, "visual_sidechain_panic");
+	load_frontend_hotkey(profile, g_restore_hotkey_id, "visual_sidechain_restore");
+	load_frontend_hotkey(profile, g_tap_tempo_hotkey_id, "visual_sidechain_tap_tempo");
+	load_frontend_hotkey(profile, g_lock_bpm_hotkey_id, "visual_sidechain_lock_bpm");
+	load_frontend_hotkey(profile, g_resync_downbeat_hotkey_id, "visual_sidechain_resync_downbeat");
+}
+
+static void on_frontend_event(enum obs_frontend_event event, void *data)
+{
+	UNUSED_PARAMETER(data);
+	if (event == OBS_FRONTEND_EVENT_FINISHED_LOADING || event == OBS_FRONTEND_EVENT_PROFILE_CHANGED)
+		load_frontend_hotkeys();
+}
+
 /* Shown by the OBS 33 Plugin Manager when data/manifest.json gives no display name. Keep both strings in sync
  * with buildspec.json (displayName) and cmake/common/manifest.json.in (description). */
 const char *obs_module_name(void)
@@ -223,6 +259,7 @@ bool obs_module_load(void)
 	g_resync_downbeat_hotkey_id = obs_hotkey_register_frontend("visual_sidechain_resync_downbeat",
 								   obs_module_text("Hotkey.ResyncDownbeat"),
 								   on_resync_downbeat_hotkey, NULL);
+	obs_frontend_add_event_callback(on_frontend_event, NULL);
 	obs_log(LOG_INFO, "plugin loaded successfully (version %s)", PLUGIN_VERSION);
 	return true;
 }
@@ -234,6 +271,7 @@ void obs_module_post_load(void)
 
 void obs_module_unload(void)
 {
+	obs_frontend_remove_event_callback(on_frontend_event, NULL);
 	if (g_panic_hotkey_id != OBS_INVALID_HOTKEY_ID) {
 		obs_hotkey_unregister(g_panic_hotkey_id);
 		g_panic_hotkey_id = OBS_INVALID_HOTKEY_ID;
