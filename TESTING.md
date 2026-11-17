@@ -2,7 +2,7 @@
 
 Companion to [REQUIREMENTS.md](REQUIREMENTS.md) and [PLAN.md](PLAN.md).
 
-Current suite (0.7.0, checked 2026-11-16): `ctest` lists **40** tests. Test counts quoted in the dated sections below (for example 13/13 and 33/33) were correct when those runs were recorded; the suite has grown since.
+Current suite (0.7.1, checked 2026-11-16): `ctest` lists **40** tests. Test counts quoted in the dated sections below (for example 13/13 and 33/33) were correct when those runs were recorded; the suite has grown since.
 
 ---
 
