@@ -2,7 +2,7 @@
 
 Companion to [REQUIREMENTS.md](REQUIREMENTS.md) and [PLAN.md](PLAN.md).
 
-Current suite (after 0.7.1, checked 2026-11-17): `ctest` lists **42** tests on Windows and **43** on macOS, where `test-shader-gpu` is added (section M). Release 0.7.1 itself had 40. Test counts quoted in the dated sections below (for example 13/13 and 33/33) were correct when those runs were recorded; the suite has grown since.
+Current suite (0.7.2, checked 2026-11-17): `ctest` lists **42** tests on Windows and **43** on macOS, where `test-shader-gpu` is added (section M). Release 0.7.1 had 40. Test counts quoted in the dated sections below (for example 13/13 and 33/33) were correct when those runs were recorded; the suite has grown since.
 
 ---
 
@@ -197,7 +197,7 @@ The photosensitivity flash limiter is safety-critical: Maximum Flash Rate runs f
 
 ## M. macOS build (universal arm64 + x86_64, macOS 13.0+)
 
-The Mac build is new. CI builds and tests it on every pull request and push; nothing below row M.6 has been run on a real Mac yet.
+The Mac build is new. CI builds and tests it on every pull request and push. A first check on a real Mac was made on 2026-11-17 (results in the table below); the full hands-on test with controllers is still to come.
 
 ### What CI checks (GitHub Actions `macos-26`, Xcode 26.5)
 
@@ -212,18 +212,18 @@ The Mac build is new. CI builds and tests it on every pull request and push; not
 
 The runner has no display GPU (OpenGL falls back to Apple's software renderer), so CI proves the shaders translate and compile, not how they look or how fast they run.
 
-### Manual checks on a real Mac (not run yet)
+### Manual checks on a real Mac
 
 Use OBS Studio 33.0.0 or newer. Note the Mac (Apple Silicon or Intel), the macOS version and the renderer (**Settings → Advanced → Video → Renderer**) for each run, and keep the OBS log (**Help → Log Files**).
 
 | # | Check | Expected | Result |
 |---|-------|----------|--------|
-| M.7 | Install: open the `.pkg` with right-click **Open** (it is unsigned), start OBS | The log has `[visual-sidechain] plugin loaded successfully (version <x>)`; the Plugin Manager shows Visual Sidechain without a Legacy flag | Not run |
-| M.8 | Each shader renders, OpenGL renderer: a Shader Filter on a video source, each of the 11 presets in turn, music playing on Track 1 | Each logs `[visual-sidechain] Compiled shader '<file>'` with no compile error, and the picture moves with the music and looks like it does on Windows (compare with the same source on a PC if one is at hand) | Not run |
+| M.7 | Install: open the `.pkg` with right-click **Open** (it is unsigned), start OBS | The log has `[visual-sidechain] plugin loaded successfully (version <x>)`; the Plugin Manager shows Visual Sidechain without a Legacy flag | Pass (2026-11-17, OBS 33.0.1, Apple Silicon M6, macOS 27.3; the vendor requests answer) |
+| M.8 | Each shader renders, OpenGL renderer: a Shader Filter on a video source, each of the 11 presets in turn, music playing on Track 1 | Each logs `[visual-sidechain] Compiled shader '<file>'` with no compile error, and the picture moves with the music and looks like it does on Windows (compare with the same source on a PC if one is at hand) | Pass (2026-11-17): all 11 compile on the Mac GPU and look and move as on Windows; the renderer was not noted, so run M.8 and M.9 again with each one named |
 | M.9 | Each shader renders, Metal renderer (experimental in OBS 33; restart OBS after switching) | As M.8 | Not run |
 | M.10 | Flash cap: FFT Strobe & Flash at defaults on a dark source, a 10 Hz click track, record 10 s and step through frame by frame (RF.3 on a Mac) | No more than 3 flashes in any second, each back to the base image in between | Not run |
-| M.11 | Hotkeys: set keys in **Settings → Hotkeys** for Panic, Restore visuals, Tap Tempo, Lock BPM and Resync Downbeat; press each; quit OBS (**Cmd+Q**), start it again and press them again | Panic puts every Shader Filter into pass-through and zeroes the amounts; Restore visuals brings them back; the tempo keys log as on Windows; all keys still work after the restart | Not run |
+| M.11 | Hotkeys: set keys in **Settings → Hotkeys** for Panic, Restore visuals, Tap Tempo, Lock BPM and Resync Downbeat; press each; quit OBS (**Cmd+Q**), start it again and press them again | Panic puts every Shader Filter into pass-through and zeroes the amounts; Restore visuals brings them back; the tempo keys log as on Windows; all keys still work after the restart | Partly checked (2026-11-17): Panic, Restore visuals and the saved hotkeys work after the restart; the tempo keys were not reported separately |
 | M.12 | Audio tap and Audio Modulator: a filter on Track 1, then on a named source; an Audio Modulator driving a Color Correction setting; save the scene collection while it pulses | The tap lines appear in the log; the setting pulses; the saved JSON holds the baseline value | Not run |
 | M.13 | Tape Deck: a Browser Source with the Tape Deck filter and a tape at a path with a space and a non-Latin letter under `/Users/<you>/Movies/` (MP4 H.264 first, then MOV, MKV, WebM) | The tape plays; Speed from 25 % to 800 % changes picture and sound live; Play / Pause, Cue to Start and the speed hotkeys work; `get_decks` over obs-websocket shows the deck `linked`; a relative path shows the Bad path message. No firewall prompt appears (the listener is on 127.0.0.1 only); report one if it does | Not run |
 | M.14 | Midi Fadester on the same Mac, if installed: bind a fader to Effect Mix and to a Tape Deck Speed Fader | Both follow the fader | Not run |
-| M.15 | Quit OBS | The log ends with `[visual-sidechain] plugin unloaded` and no crash report | Not run |
+| M.15 | Quit OBS | The log ends with `[visual-sidechain] plugin unloaded` and no crash report | OBS quit cleanly with 0 memory leaks (2026-11-17) |

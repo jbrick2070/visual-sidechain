@@ -10,7 +10,7 @@ Thank you for beta testing **Visual Sidechain**! This single-page guide takes ab
 
 ## Before You Start (Requirements & Photosensitivity Safety)
 
-- **Required OBS Version:** **OBS Studio 33.0.0 or newer** on **Windows 10 / 11 (x64)** or **macOS 13.0 or newer** (Apple Silicon or Intel; the Mac build is experimental and has not yet been run in OBS on a real Mac, so Mac reports are especially welcome). Visual Sidechain uses OBS 33's plugin layout (`plugins\visual-sidechain\` on Windows, `visual-sidechain.plugin` on a Mac) and will not load in OBS 30-32.
+- **Required OBS Version:** **OBS Studio 33.0.0 or newer** on **Windows 10 / 11 (x64)** or **macOS 13.0 or newer** (Apple Silicon or Intel; the Mac build has had a first check in OBS 33.0.1 on an Apple Silicon Mac, but not yet the full hands-on test, so Mac reports are especially welcome). Visual Sidechain uses OBS 33's plugin layout (`plugins\visual-sidechain\` on Windows, `visual-sidechain.plugin` on a Mac) and will not load in OBS 30-32.
 - **Photosensitivity Warning:** Audio-reactive shaders (especially `FFT Strobe & Flash`) can produce rapid brightness, contrast, or pattern changes.
   - `FFT Strobe & Flash` allows at most **3 flashes per second** per filter: **`Maximum Flash Rate (Hz)`** is adjustable from 0.5 to 3 (default 3), and Visual Sidechain skips any trigger that comes faster. Your footage, several strobe filters at once and other effects can still add flashes, so check the final output before you stream, record or project it, and bind **`Visual Sidechain: Panic (all effects off)`** (below) for an instant stop.
   - Before testing on live or high-contrast footage, open **`Settings -> Hotkeys`**, filter for **`Visual Sidechain`**, and bind:
@@ -28,8 +28,8 @@ Close OBS Studio, then choose the package from [GitHub Releases](https://github.
 | **Standard Windows Install** (easiest) | `visual-sidechain-*-windows-x64-Installer.exe` | Run the installer (installs to `C:\ProgramData\obs-studio\plugins\visual-sidechain\`). |
 | **Standard Windows Install** (manual zip) | `visual-sidechain-*-windows-x64.zip` | Extract so you have `C:\ProgramData\obs-studio\plugins\visual-sidechain\visual-sidechain.dll` and `data\`. |
 | **Portable OBS Studio 33** | `visual-sidechain-*-windows-x64-Portable.zip` | Extract directly into your portable OBS 33 root folder so you have `<OBS 33 root>\plugins\visual-sidechain\visual-sidechain.dll`. |
-| **Mac** (experimental) | `visual-sidechain-*-macos-universal.pkg` | Open the installer (installs under `Library/Application Support/obs-studio/plugins`). See the Mac note below. |
-| **Mac**, unpack it yourself (experimental) | `visual-sidechain-*-macos-universal.tar.xz` | Unpack and move `visual-sidechain.plugin` to `~/Library/Application Support/obs-studio/plugins/`. |
+| **Mac** | `visual-sidechain-*-macos-universal.pkg` | Open the installer (installs under `Library/Application Support/obs-studio/plugins`). See the Mac note below. |
+| **Mac**, unpack it yourself | `visual-sidechain-*-macos-universal.tar.xz` | Unpack and move `visual-sidechain.plugin` to `~/Library/Application Support/obs-studio/plugins/`. |
 
 > **Unsigned Binary Note (Windows SmartScreen):** Beta binaries are not Authenticode code-signed yet.
 > - On the `.exe` installer, Windows SmartScreen will show *"Windows protected your PC"*; click **More info -> Run anyway**.
@@ -40,7 +40,7 @@ Close OBS Studio, then choose the package from [GitHub Releases](https://github.
 
 **Verify load:** Start OBS Studio 33, open **`Help -> Log Files -> View Current Log`**, and confirm you see (the vendor line appears only when obs-websocket is loaded):
 ```text
-[visual-sidechain] plugin loaded successfully (version 0.7.1)
+[visual-sidechain] plugin loaded successfully (version 0.7.2)
 [visual-sidechain] Registered obs-websocket vendor 'visual-sidechain' (get_signals=1, get_decks=1)
 ```
 

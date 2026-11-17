@@ -4,14 +4,17 @@ All notable changes to Visual Sidechain are listed here, newest first. The forma
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-11-17
+
 ### Added
 
-- **macOS build (experimental):** a universal (Apple Silicon and Intel) plugin for OBS Studio 33 on macOS 13.0 or newer, built and tested in CI on the `macos-26` runner and shipped as `visual-sidechain-<version>-macos-universal.pkg` and `.tar.xz` next to the Windows files. Unsigned and not notarized; the README says how to open it. It has every feature of the Windows build; it has not yet been run in OBS on a real Mac.
+- **macOS build:** a universal (Apple Silicon and Intel) plugin for OBS Studio 33 on macOS 13.0 or newer, built and tested in CI on the `macos-26` runner and shipped as `visual-sidechain-<version>-macos-universal.pkg` and `.tar.xz` next to the Windows files. Unsigned and not notarized; the README says how to open it. It has every feature of the Windows build. On 2026-11-17 it was installed in OBS 33.0.1 on an Apple Silicon Mac (M6, macOS 27.3) and checked: it loads, its vendor requests answer, all 11 shaders compile on the Mac GPU and behave as on Windows, Panic, Restore visuals and saved hotkeys work after a restart, and OBS quits with 0 memory leaks. The full hands-on test with controllers is still to come.
 - **Tape Deck on macOS:** the report listener runs on POSIX sockets (loopback only, close-on-exec, no `SIGPIPE`, the port held exclusively), tokens come from `arc4random_buf`, and tapes and the deck page take absolute macOS paths (`file:///Users/...`).
 - **`test-shader-gpu` (macOS CI):** builds every built-in shader with OBS's own OpenGL (HLSL to GLSL) and Metal renderers and fails on any translation or compile error; a broken shader must be refused.
 
 ### Changed
 
+- Built-in shaders now compile on macOS too: six of them used `(float)x` casts or `[unroll]`, which OpenGL's GLSL refuses; they are written as `float(x)` and plain loops, and `check-shader-portability` catches those two forms on Windows as well.
 - The listener and token tests and the tape-path tests run on Windows and macOS; the path rules of both systems are checked on both.
 
 ## [0.7.1] - 2026-11-16
@@ -49,6 +52,7 @@ All notable changes to Visual Sidechain are listed here, newest first. The forma
 - Corrected stale kick (`55..130 Hz`) and snare (`250..4000 Hz`) frequency band comments in `src/core/analyzer.h`.
 - `README.md`: clarify that version `0.6.0` is shared with Midi Fadester while Fadester for OBS is versioned separately (`0.11.0`).
 
-[Unreleased]: https://github.com/jbrick2070/visual-sidechain/compare/0.7.1...HEAD
+[Unreleased]: https://github.com/jbrick2070/visual-sidechain/compare/0.7.2...HEAD
+[0.7.2]: https://github.com/jbrick2070/visual-sidechain/compare/0.7.1...0.7.2
 [0.7.1]: https://github.com/jbrick2070/visual-sidechain/compare/0.7.0...0.7.1
 [0.7.0]: https://github.com/jbrick2070/visual-sidechain/compare/0.6.0...0.7.0

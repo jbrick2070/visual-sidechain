@@ -41,7 +41,7 @@ at commit `73fb5c2` (version 2.6.1, 2026-10-24).
 
 | ID | Requirement |
 |----|-------------|
-| R-PLAT-1 | Target: Windows 11 x64, OBS Studio 33.0.0 or later, NVIDIA RTX GPU first (development and test machine has an NVIDIA RTX 5080). macOS 13.0 or later (universal arm64 + x86_64) is a second target with every feature (R-PLAT-9, R-PLAT-11); it is built and tested in CI, and still needs a check in OBS on a real Mac (`TESTING.md` section M). |
+| R-PLAT-1 | Target: Windows 11 x64, OBS Studio 33.0.0 or later, NVIDIA RTX GPU first (development and test machine has an NVIDIA RTX 5080). macOS 13.0 or later (universal arm64 + x86_64) is a second target with every feature (R-PLAT-9, R-PLAT-11); it is built and tested in CI, and had a first check in OBS 33.0.1 on an Apple Silicon Mac on 2026-11-17; the full hands-on test is still to come (`TESTING.md` section M). |
 | R-PLAT-2 | Install layout is the OBS 33 layout and only that layout: `C:\ProgramData\obs-studio\plugins\visual-sidechain\visual-sidechain.dll` with data in `C:\ProgramData\obs-studio\plugins\visual-sidechain\data\` (`manifest.json` in `data\`, locale in `data\locale\`, shaders in `data\shaders\`). Source: `frontend/plugin-manager/PluginModuleLoader_Windows.cpp` at tag `33.0.0`. |
 | R-PLAT-3 | Legacy plugin layouts (`plugins\<name>\bin\64bit\<name>.dll` and `C:\Program Files\obs-studio\obs-plugins\64bit\`) are never built, installed or packaged. Visual Sidechain must load in OBS 33.0.0 without a `Legacy` chip in the Plugin Manager. |
 | R-PLAT-4 | Portable-mode zip uses the OBS 33 portable layout: `<OBS root>\plugins\visual-sidechain\visual-sidechain.dll` and `<OBS root>\plugins\visual-sidechain\data\`. |
