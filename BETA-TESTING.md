@@ -1,4 +1,4 @@
-# Visual Sidechain -- Beta Tester Guide (OBS Studio 33, Windows x64)
+# Visual Sidechain -- Beta Tester Guide (OBS Studio 33, Windows x64 and macOS)
 
 Thank you for beta testing **Visual Sidechain**! This single-page guide takes about **10 minutes** in OBS Studio 33 and walks through installing the plugin, setting up the photosensitivity safety hotkeys, testing the 11 built-in FFT-reactive GPU shaders, testing sibling-filter sidechaining with the **Audio Modulator**, trying the **Tape Deck**, and filing your hardware report.
 
@@ -10,7 +10,7 @@ Thank you for beta testing **Visual Sidechain**! This single-page guide takes ab
 
 ## Before You Start (Requirements & Photosensitivity Safety)
 
-- **Required OBS Version:** **OBS Studio 33.0.0 or newer** on **Windows 10 / 11 (x64)**. Visual Sidechain uses OBS 33's unified plugin package layout (`plugins\visual-sidechain\`) and will not load in OBS 30-32.
+- **Required OBS Version:** **OBS Studio 33.0.0 or newer** on **Windows 10 / 11 (x64)** or **macOS 13.0 or newer** (Apple Silicon or Intel; the Mac build is experimental and has not yet been run in OBS on a real Mac, so Mac reports are especially welcome). Visual Sidechain uses OBS 33's plugin layout (`plugins\visual-sidechain\` on Windows, `visual-sidechain.plugin` on a Mac) and will not load in OBS 30-32.
 - **Photosensitivity Warning:** Audio-reactive shaders (especially `FFT Strobe & Flash`) can produce rapid brightness, contrast, or pattern changes.
   - `FFT Strobe & Flash` allows at most **3 flashes per second** per filter: **`Maximum Flash Rate (Hz)`** is adjustable from 0.5 to 3 (default 3), and Visual Sidechain skips any trigger that comes faster. Your footage, several strobe filters at once and other effects can still add flashes, so check the final output before you stream, record or project it, and bind **`Visual Sidechain: Panic (all effects off)`** (below) for an instant stop.
   - Before testing on live or high-contrast footage, open **`Settings -> Hotkeys`**, filter for **`Visual Sidechain`**, and bind:
@@ -28,11 +28,15 @@ Close OBS Studio, then choose the package from [GitHub Releases](https://github.
 | **Standard Windows Install** (easiest) | `visual-sidechain-*-windows-x64-Installer.exe` | Run the installer (installs to `C:\ProgramData\obs-studio\plugins\visual-sidechain\`). |
 | **Standard Windows Install** (manual zip) | `visual-sidechain-*-windows-x64.zip` | Extract so you have `C:\ProgramData\obs-studio\plugins\visual-sidechain\visual-sidechain.dll` and `data\`. |
 | **Portable OBS Studio 33** | `visual-sidechain-*-windows-x64-Portable.zip` | Extract directly into your portable OBS 33 root folder so you have `<OBS 33 root>\plugins\visual-sidechain\visual-sidechain.dll`. |
+| **Mac** (experimental) | `visual-sidechain-*-macos-universal.pkg` | Open the installer (installs under `Library/Application Support/obs-studio/plugins`). See the Mac note below. |
+| **Mac**, unpack it yourself (experimental) | `visual-sidechain-*-macos-universal.tar.xz` | Unpack and move `visual-sidechain.plugin` to `~/Library/Application Support/obs-studio/plugins/`. |
 
 > **Unsigned Binary Note (Windows SmartScreen):** Beta binaries are not Authenticode code-signed yet.
 > - On the `.exe` installer, Windows SmartScreen will show *"Windows protected your PC"*; click **More info -> Run anyway**.
 > - On either `.zip`, right-click the downloaded `.zip` -> **Properties -> check "Unblock" -> OK** before extracting.
 > - *(Note: Windows 11 machines with **Smart App Control** set to strict enforcement block all unsigned third-party DLLs by OS policy.)*
+
+> **Mac note:** the `.pkg` is not signed or notarized by Apple, so macOS will refuse to open it the first time. Right-click (or Control-click) the `.pkg` and choose **Open**, then **Open** again; or try to open it once, then go to **System Settings → Privacy & Security** and click **Open Anyway**. In your report, please say which Mac (Apple Silicon or Intel), which macOS, and which renderer OBS uses (**Settings → Advanced → Video → Renderer**: OpenGL, or the experimental Metal).
 
 **Verify load:** Start OBS Studio 33, open **`Help -> Log Files -> View Current Log`**, and confirm you see (the vendor line appears only when obs-websocket is loaded):
 ```text
