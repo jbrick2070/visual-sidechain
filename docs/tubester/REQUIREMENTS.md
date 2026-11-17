@@ -24,7 +24,7 @@ Conventions: `R-*` rows are requirements, hard unless marked soft. `F-*` rows ar
 |----|-------------|
 | R-TAP-1 | A tape is any local file the operator chooses. Tubester never plays or downloads from YouTube, and has no Internet Archive client. |
 | R-TAP-2 | Tubester forces no rights check: no prompt, gate, label or required record. Rights are the operator's. One short note in the docs says so. |
-| R-TAP-3 | Any legal Windows path works, including spaces, apostrophes, `%`, `#`, `&` and non-Latin letters. |
+| R-TAP-3 | Any legal Windows path (drive or network share) works, including spaces, apostrophes, `%`, `#`, `&` and non-Latin letters. On macOS any absolute path works the same way (`/Users/...`, `/Volumes/...`); a backslash there is part of a name. On both systems control characters and `? * < > | "` are refused, so the Bad path message is true on both. |
 | R-TAP-4 | The docs list which formats play (F-3) and give one FFmpeg line to convert the rest, including DXV. No built-in converter in 0.1. |
 
 ## 3. The deck
@@ -121,6 +121,6 @@ Test copy of OBS 33.0.1 on this PC. F-2 and F-4 used a scratch Lua filter standi
 - Whether a warmed deck holds through long hidden periods. Tested for seconds only.
 - A/V sync with the offset applied.
 - Real Internet Archive files.
-- Other PCs, especially without hardware decoding. Mac and Linux are out of scope for 0.1.
+- Other PCs, especially without hardware decoding. Linux is out of scope. The Mac build (from the release after 0.7.1) has the deck, its listener and Mac paths, tested in CI; playback in OBS's Browser Source on a real Mac is not checked yet (`TESTING.md` section M).
 - SmartScreen behaviour for the DLL.
 - Reverse.

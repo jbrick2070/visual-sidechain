@@ -39,9 +39,11 @@ and the legacy install layout.
 - Default install prefix (`cmake/windows/defaults.cmake`): `%ALLUSERSPROFILE%/obs-studio/plugins`, as in template
   commit 013ffca.
 - `CMakePresets.json`: Windows SDK `10.0.26100.0`.
-- `buildspec.json`: OBS 33.0.0 and obs-deps/Qt6 2026-10-23, Windows hashes only.
-- CI: macOS and Ubuntu jobs disabled with `if: false` and removed from the release job; ctest runs after the
-  build; portable zip uses the OBS 33 `plugins/<name>/` layout. The Windows runner matches the template's
-  `windows-2022`.
+- `buildspec.json`: OBS 33.0.0 and obs-deps/Qt6 2026-10-23, Windows and macOS hashes.
+- CI: the Ubuntu job is disabled with `if: false` and removed from the release job; ctest runs after the build on
+  Windows and macOS; portable zip uses the OBS 33 `plugins/<name>/` layout. The Windows runner matches the
+  template's `windows-2022`. The macOS job (macos-26, Xcode 26.5, macOS 13.0 target, unsigned) and the
+  `cmake/macos` fixes come from midi-fadester; the macOS nested OBS build also builds `libobs-opengl` and
+  `libobs-metal` for `test-shader-gpu`.
 - `.gersemirc` equals template commit 7c01742 ("CI: Remove invalid options from .gersemirc").
 - Tests: `tests/` (CTest) is added by the root `CMakeLists.txt` behind `VISUAL_SIDECHAIN_BUILD_TESTS`.

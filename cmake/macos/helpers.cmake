@@ -24,6 +24,9 @@ function(set_target_properties_plugin target)
     PROPERTIES
       BUNDLE TRUE
       BUNDLE_EXTENSION plugin
+      XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME[variant=Release] YES
+      XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME[variant=RelWithDebInfo] YES
+      XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME[variant=MinSizeRel] YES
       XCODE_ATTRIBUTE_PRODUCT_NAME ${target}
       XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER ${MACOS_BUNDLEID}
       XCODE_ATTRIBUTE_CURRENT_PROJECT_VERSION ${PLUGIN_BUILD_NUMBER}
@@ -48,6 +51,11 @@ function(set_target_properties_plugin target)
 
   target_install_resources(${target})
 
+  # OBS 33 reads manifest.json from the module's data path, Contents/Resources in the bundle (R-PLAT-8)
+  set(PLUGIN_OS_ARCH macos-universal)
+  configure_file(cmake/common/manifest.json.in "${CMAKE_CURRENT_BINARY_DIR}/manifest.json" @ONLY)
+  target_add_resource(${target} "${CMAKE_CURRENT_BINARY_DIR}/manifest.json")
+
   add_custom_command(
     TARGET ${target}
     POST_BUILD
@@ -65,7 +73,7 @@ function(set_target_properties_plugin target)
   source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" PREFIX "UI Files" FILES ${target_ui_files})
 
   install(TARGETS ${target} LIBRARY DESTINATION .)
-  install(FILES "$<TARGET_BUNDLE_DIR:${target}>.dsym" CONFIGURATIONS Release DESTINATION . OPTIONAL)
+  install(DIRECTORY "$<TARGET_BUNDLE_DIR:${target}>.dSYM" CONFIGURATIONS Release DESTINATION . OPTIONAL)
 
   configure_file(cmake/macos/resources/distribution.in "${CMAKE_CURRENT_BINARY_DIR}/distribution" @ONLY)
   configure_file(cmake/macos/resources/create-package.cmake.in "${CMAKE_CURRENT_BINARY_DIR}/create-package.cmake" @ONLY)

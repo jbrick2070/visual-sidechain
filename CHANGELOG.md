@@ -4,6 +4,16 @@ All notable changes to Visual Sidechain are listed here, newest first. The forma
 
 ## [Unreleased]
 
+### Added
+
+- **macOS build (experimental):** a universal (Apple Silicon and Intel) plugin for OBS Studio 33 on macOS 13.0 or newer, built and tested in CI on the `macos-26` runner and shipped as `visual-sidechain-<version>-macos-universal.pkg` and `.tar.xz` next to the Windows files. Unsigned and not notarized; the README says how to open it. It has every feature of the Windows build; it has not yet been run in OBS on a real Mac.
+- **Tape Deck on macOS:** the report listener runs on POSIX sockets (loopback only, close-on-exec, no `SIGPIPE`, the port held exclusively), tokens come from `arc4random_buf`, and tapes and the deck page take absolute macOS paths (`file:///Users/...`).
+- **`test-shader-gpu` (macOS CI):** builds every built-in shader with OBS's own OpenGL (HLSL to GLSL) and Metal renderers and fails on any translation or compile error; a broken shader must be refused.
+
+### Changed
+
+- The listener and token tests and the tape-path tests run on Windows and macOS; the path rules of both systems are checked on both.
+
 ## [0.7.1] - 2026-11-16
 
 ### Fixed
