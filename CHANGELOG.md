@@ -4,6 +4,12 @@ All notable changes to Visual Sidechain are listed here, newest first. The forma
 
 ## [Unreleased]
 
+## [0.7.4] - 2026-11-18
+
+### Changed
+
+- **Version only:** no changes to the plugin. The number follows Midi Fadester 0.7.4 (video speed on the APC40 mkII's transport controls), as the two share one version.
+
 ## [0.7.3] - 2026-11-18
 
 ### Changed
@@ -58,7 +64,8 @@ All notable changes to Visual Sidechain are listed here, newest first. The forma
 - Corrected stale kick (`55..130 Hz`) and snare (`250..4000 Hz`) frequency band comments in `src/core/analyzer.h`.
 - `README.md`: clarify that version `0.6.0` is shared with Midi Fadester while Fadester for OBS is versioned separately (`0.11.0`).
 
-[Unreleased]: https://github.com/jbrick2070/visual-sidechain/compare/0.7.3...HEAD
+[Unreleased]: https://github.com/jbrick2070/visual-sidechain/compare/0.7.4...HEAD
+[0.7.4]: https://github.com/jbrick2070/visual-sidechain/compare/0.7.3...0.7.4
 [0.7.3]: https://github.com/jbrick2070/visual-sidechain/compare/0.7.2...0.7.3
 [0.7.2]: https://github.com/jbrick2070/visual-sidechain/compare/0.7.1...0.7.2
 [0.7.1]: https://github.com/jbrick2070/visual-sidechain/compare/0.7.0...0.7.1
