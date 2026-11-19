@@ -4,6 +4,12 @@ All notable changes to Visual Sidechain are listed here, newest first. The forma
 
 ## [Unreleased]
 
+## [0.7.8] - 2026-11-18
+
+### Fixed
+
+- **A scene-collection save could freeze OBS** with an Audio Modulator running and Midi Fadester loaded. The modulator's tick asked Midi Fadester for its fader values while holding the modulator's lock; a save holds OBS's sources lock while it waits for that lock, and Midi Fadester can hold its own lock while it looks up an OBS source, so the three could wait on each other. The tick now asks after it lets go of the lock (one frame later).
+
 ## [0.7.7] - 2026-11-18
 
 ### Changed
@@ -82,7 +88,8 @@ All notable changes to Visual Sidechain are listed here, newest first. The forma
 - Corrected stale kick (`55..130 Hz`) and snare (`250..4000 Hz`) frequency band comments in `src/core/analyzer.h`.
 - `README.md`: clarify that version `0.6.0` is shared with Midi Fadester while Fadester for OBS is versioned separately (`0.11.0`).
 
-[Unreleased]: https://github.com/jbrick2070/visual-sidechain/compare/0.7.7...HEAD
+[Unreleased]: https://github.com/jbrick2070/visual-sidechain/compare/0.7.8...HEAD
+[0.7.8]: https://github.com/jbrick2070/visual-sidechain/compare/0.7.7...0.7.8
 [0.7.7]: https://github.com/jbrick2070/visual-sidechain/compare/0.7.6...0.7.7
 [0.7.6]: https://github.com/jbrick2070/visual-sidechain/compare/0.7.5...0.7.6
 [0.7.5]: https://github.com/jbrick2070/visual-sidechain/compare/0.7.4...0.7.5
